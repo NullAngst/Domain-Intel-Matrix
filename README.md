@@ -13,7 +13,7 @@ A self-hosted, web-based domain intelligence tool powered by a Python Flask back
 - **Server Headers**: Inspects HTTP headers from the target server.
 - **Web Interface**: A modern, dark-themed UI for easy viewing of results.
 - **Pick a custom DNS server**: Also supports ports! (eg. 127.0.0.1:5335)
-- **Reverse IP lookups**: Currently limited to IPv4 due to API limitations. Lookups use the free endpoint by default but can optionally [use an API key](https://github.com/ReverendRetro/Domain-Intel-Matrix/edit/main/README.md#api-key).
+- **Reverse IP lookups**: Currently limited to IPv4 due to API limitations. Lookups use the free endpoint by default but can optionally [use an API key](https://github.com/NullAngst/Domain-Intel-Matrix/edit/main/README.md#api-key).
 - **Systemd Service**: Can be configured to run as a background service that starts on boot.
 - **Easy to run in Docker**
 
@@ -22,7 +22,7 @@ A self-hosted, web-based domain intelligence tool powered by a Python Flask back
 ## Prerequisites
 
 - Python 3.8 or newer
-- `python3-venv` package for creating virtual environments ([or run it in Docker](https://github.com/ReverendRetro/Domain-Intel-Matrix/edit/main/README.md#optionally-run-this-in-docker_)).
+- `python3-venv` package for creating virtual environments ([or run it in Docker](https://github.com/NullAngst/Domain-Intel-Matrix/edit/main/README.md#optionally-run-this-in-docker_)).
 - `sudo` privileges.
 
 ---
@@ -165,7 +165,7 @@ EXPOSE 4500
 CMD ["python", "./checker_backend.py"]
 ```
 
-### 3. Create a new text file named requirements.txt with the same contents [as listed above](https://github.com/ReverendRetro/Domain-Intel-Matrix#2-create-requirementstxt).
+### 3. Create a new text file named requirements.txt with the same contents [as listed above](https://github.com/NullAngst/Domain-Intel-Matrix#2-create-requirementstxt).
 
 ### 4. While in the directory with the files, run `docker build -t domain-intel-matrix/latest .`
 *domain-intel-matrix/latest can be replaced with whatever name you like.*
