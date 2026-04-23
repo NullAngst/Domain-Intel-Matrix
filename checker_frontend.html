@@ -10,59 +10,62 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&family=Exo+2:wght@600;700&display=swap" rel="stylesheet">
     <style>
-        body { 
-            font-family: 'Roboto Mono', monospace; 
+        body {
+            font-family: 'Roboto Mono', monospace;
             background-color: #0d1117;
             color: #c9d1d9;
         }
         .font-display { font-family: 'Exo 2', sans-serif; }
-        .loader { 
+        .loader {
             border-color: rgba(0, 255, 255, 0.2);
-            border-top-color: #f41c2c; 
-            animation: spin 1s linear infinite; 
+            border-top-color: #f41c2c;
+            animation: spin 1s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        
-        .card { 
-            background-color: #161b22; 
+
+        .card {
+            background-color: #161b22;
             border: 1px solid #30363d;
-            transition: all 0.2s ease-in-out;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
         }
         .card:hover {
             border-color: #f41c2c;
             box-shadow: 0 0 15px rgba(244, 28, 44, 0.2);
         }
-        .card-title { 
-            color: #f41c2c; 
+        .card-title {
+            color: #f41c2c;
             font-family: 'Exo 2', sans-serif;
             text-shadow: 0 0 5px rgba(244, 28, 44, 0.5);
         }
         .card-content { color: #8b949e; }
         .card-list { list-style-position: inside; list-style-type: '» '; }
-        
+
         .btn-scan {
             background-color: #f41c2c;
             color: #0d1117;
             font-family: 'Exo 2', sans-serif;
-            text-shadow: 0 0 2px rgba(13, 17, 23, 0.5);
-            transition: all 0.2s ease-in-out;
+            transition: box-shadow 0.2s ease-in-out, opacity 0.2s ease-in-out;
         }
-        .btn-scan:hover {
-            box-shadow: 0 0 20px #f41c2c;
-        }
-        
+        .btn-scan:hover { box-shadow: 0 0 20px #f41c2c; }
+        .btn-scan:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+
         strong { color: #c9d1d9; }
-        pre { 
-            background-color: #0d1117 !important; 
+        pre {
+            background-color: #0d1117 !important;
             white-space: pre-wrap;
             word-break: break-all;
         }
+
+        /* Security header status badges */
+        .badge-ok   { color: #3fb950; }
+        .badge-warn { color: #d29922; }
+        .badge-miss { color: #f85149; }
     </style>
 </head>
 <body class="min-h-screen">
 
     <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-7xl">
-        
+
         <header class="text-center mb-8">
             <h1 class="text-4xl sm:text-5xl font-bold text-gray-100 font-display">Domain Intel Matrix</h1>
             <p class="text-[#f41c2c] mt-2">// Local Backend Active</p>
@@ -71,9 +74,18 @@
         <!-- Input Section -->
         <div class="bg-[#161b22] border border-[#30363d] p-6 rounded-xl shadow-lg mb-8 sticky top-4 z-10">
             <div class="flex flex-col sm:flex-row gap-4 items-center">
-                <input type="text" id="queryInput" placeholder="domain.tld or IP address" class="flex-grow w-full px-4 py-3 text-lg bg-[#0d1117] border-2 border-[#30363d] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f41c2c] focus:border-[#f41c2c] transition text-gray-200">
+                <input type="text" id="queryInput"
+                    placeholder="domain.tld or IP address"
+                    autocomplete="off" autocapitalize="off" spellcheck="false"
+                    class="flex-grow w-full px-4 py-3 text-lg bg-[#0d1117] border-2 border-[#30363d] rounded-lg
+                           focus:outline-none focus:ring-2 focus:ring-[#f41c2c] focus:border-[#f41c2c] transition text-gray-200">
                 <div class="flex w-full sm:w-auto gap-4">
-                    <input type="text" id="nameserverInput" value="9.9.9.9" class="w-full sm:w-48 px-4 py-3 text-lg bg-[#0d1117] border-2 border-[#30363d] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f41c2c] focus:border-[#f41c2c] transition text-gray-200" title="DNS Resolver">
+                    <input type="text" id="nameserverInput" value="9.9.9.9"
+                        title="DNS Resolver (e.g. 9.9.9.9, 1.1.1.1, 127.0.0.1:5335)"
+                        placeholder="DNS resolver"
+                        autocomplete="off" spellcheck="false"
+                        class="w-full sm:w-52 px-4 py-3 text-lg bg-[#0d1117] border-2 border-[#30363d] rounded-lg
+                               focus:outline-none focus:ring-2 focus:ring-[#f41c2c] focus:border-[#f41c2c] transition text-gray-200">
                     <button id="checkButton" class="w-full sm:w-auto btn-scan font-semibold px-8 py-3 rounded-lg">
                         SCAN
                     </button>
@@ -81,9 +93,10 @@
             </div>
             <div id="error-message" class="text-red-400 mt-3 font-medium hidden"></div>
         </div>
-        
+
         <div class="text-center -mt-4 mb-8">
-            <a href="https://github.com/NullAngst/Domain-Intel-Matrix" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-[#f41c2c] transition-colors text-sm">
+            <a href="https://github.com/NullAngst/Domain-Intel-Matrix" target="_blank" rel="noopener noreferrer"
+               class="text-gray-500 hover:text-[#f41c2c] transition-colors text-sm">
                 // View on GitHub
             </a>
         </div>
@@ -91,17 +104,17 @@
         <!-- Loading Spinner -->
         <div id="loader" class="text-center my-12 hidden">
             <div class="loader ease-linear rounded-full border-8 h-24 w-24 mx-auto"></div>
-            <p class="mt-4 text-[#f41c2c] tracking-widest">Executing query...</p>
+            <p class="mt-4 text-[#f41c2c] tracking-widest" id="loaderText">Executing query...</p>
         </div>
 
         <!-- History and Export Section -->
         <div id="historyAndExport" class="hidden bg-[#161b22] border border-[#30363d] p-4 rounded-xl shadow-lg mb-8">
             <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div id="historyContainer">
-                    <span class="text-gray-400 mr-2">// History:</span>
+                <div id="historyContainer" class="flex flex-wrap gap-1 items-center">
+                    <span class="text-gray-400 mr-2 shrink-0">// History:</span>
                     <span id="historyList"></span>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 shrink-0">
                     <button id="copyButton" class="btn-scan text-xs font-semibold px-4 py-2 rounded-lg">// Copy Results</button>
                     <button id="downloadButton" class="btn-scan text-xs font-semibold px-4 py-2 rounded-lg">// Download JSON</button>
                 </div>
@@ -110,164 +123,348 @@
 
         <!-- Reverse IP Results Section -->
         <div id="reverseIpResults" class="hidden">
-             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold font-display">Reverse IP results for: <span id="ipChecked" class="text-[#f41c2c]"></span></h2>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold font-display">Reverse IP results for:
+                    <span id="ipChecked" class="text-[#f41c2c]"></span>
+                </h2>
                 <button id="redoIpLookupButton" class="hidden btn-scan font-semibold px-6 py-2 rounded-lg text-sm">// Re-Scan IP</button>
-             </div>
-             <div class="card">
-                <h3 class="card-title">Hostnames Found</h3>
+            </div>
+            <div class="card p-4 rounded-xl">
+                <h3 class="card-title text-lg font-semibold mb-3">Hostnames Found</h3>
                 <ul id="hostnameList" class="card-content space-y-2"></ul>
-             </div>
+            </div>
         </div>
 
         <!-- Domain Check Results Section -->
         <div id="domainResults" class="hidden">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold font-display">Scan results for: <span id="domainChecked" class="text-[#f41c2c]"></span></h2>
+                <h2 class="text-2xl font-bold font-display">Scan results for:
+                    <span id="domainChecked" class="text-[#f41c2c]"></span>
+                </h2>
                 <button id="backButton" class="hidden btn-scan font-semibold px-6 py-2 rounded-lg text-sm">// Back to IP Results</button>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                <!-- Column 1 -->
                 <div class="flex flex-col gap-6">
-                    <div id="whois-card" class="card"><h3 class="card-title">Registrar [WHOIS]</h3><div id="whois" class="card-content"></div></div>
-                    <div id="a-records-card" class="card"><h3 class="card-title">A / AAAA Records</h3><div id="a-records" class="card-content"></div></div>
-                    <div id="www-records-card" class="card"><h3 class="card-title">WWW Records</h3><div id="www-records" class="card-content"></div></div>
+                    <div class="card p-4 rounded-xl">
+                        <h3 class="card-title text-lg font-semibold mb-3">Registrar [WHOIS]</h3>
+                        <div id="whois" class="card-content"></div>
+                    </div>
+                    <div class="card p-4 rounded-xl">
+                        <h3 class="card-title text-lg font-semibold mb-3">A / AAAA Records</h3>
+                        <div id="a-records" class="card-content"></div>
+                    </div>
+                    <div class="card p-4 rounded-xl">
+                        <h3 class="card-title text-lg font-semibold mb-3">WWW Records</h3>
+                        <div id="www-records" class="card-content"></div>
+                    </div>
                 </div>
+
+                <!-- Column 2 -->
                 <div class="flex flex-col gap-6">
-                    <div id="ns-card" class="card"><h3 class="card-title">NS Records</h3><ul id="nsRecords" class="card-content card-list"></ul></div>
-                    <div id="mx-card" class="card"><h3 class="card-title">MX Records</h3><ul id="mxRecords" class="card-content card-list"></ul></div>
-                    <div id="soa-card" class="card"><h3 class="card-title">SOA Record</h3><ul id="soa" class="card-content card-list"></ul></div>
-                    <div id="rdns-card" class="card"><h3 class="card-title">Reverse DNS [rDNS]</h3><div id="rdns" class="card-content"></div></div>
+                    <div class="card p-4 rounded-xl">
+                        <h3 class="card-title text-lg font-semibold mb-3">NS Records</h3>
+                        <ul id="nsRecords" class="card-content card-list"></ul>
+                    </div>
+                    <div class="card p-4 rounded-xl">
+                        <h3 class="card-title text-lg font-semibold mb-3">MX Records</h3>
+                        <ul id="mxRecords" class="card-content card-list"></ul>
+                    </div>
+                    <div class="card p-4 rounded-xl">
+                        <h3 class="card-title text-lg font-semibold mb-3">SOA Record</h3>
+                        <ul id="soa" class="card-content card-list"></ul>
+                    </div>
+                    <div class="card p-4 rounded-xl">
+                        <h3 class="card-title text-lg font-semibold mb-3">Reverse DNS [rDNS]</h3>
+                        <div id="rdns" class="card-content"></div>
+                    </div>
                 </div>
+
+                <!-- Column 3 -->
                 <div class="flex flex-col gap-6">
-                    <div id="security-card" class="card"><h3 class="card-title">Security Records</h3><div id="security" class="card-content"></div></div>
-                    <div id="ssl-card" class="card"><h3 class="card-title">SSL Certificate</h3><div id="ssl" class="card-content"></div></div>
-                    <div id="mx-ptr-card" class="card"><h3 class="card-title">MX PTR Records</h3><div id="mx-ptr" class="card-content"></div></div>
+                    <div class="card p-4 rounded-xl">
+                        <h3 class="card-title text-lg font-semibold mb-3">Security Records</h3>
+                        <div id="security" class="card-content"></div>
+                    </div>
+                    <div class="card p-4 rounded-xl">
+                        <h3 class="card-title text-lg font-semibold mb-3">SSL Certificate</h3>
+                        <div id="ssl" class="card-content"></div>
+                    </div>
+                    <div class="card p-4 rounded-xl">
+                        <h3 class="card-title text-lg font-semibold mb-3">MX PTR Records</h3>
+                        <div id="mx-ptr" class="card-content"></div>
+                    </div>
                 </div>
+
+                <!-- Column 4 -->
                 <div class="flex flex-col gap-6">
-                    <div id="tech-card" class="card"><h3 class="card-title">Technology Detection</h3><div id="tech" class="card-content"></div></div>
-                    <div id="sec-headers-card" class="card"><h3 class="card-title">Security Header Analysis</h3><div id="sec-headers" class="card-content"></div></div>
-                    <div id="headers-card" class="card"><h3 class="card-title">Full HTTP Headers</h3><div id="headers" class="card-content"></div></div>
+                    <div class="card p-4 rounded-xl">
+                        <h3 class="card-title text-lg font-semibold mb-3">Technology Detection</h3>
+                        <div id="tech" class="card-content"></div>
+                    </div>
+                    <div class="card p-4 rounded-xl">
+                        <h3 class="card-title text-lg font-semibold mb-3">Security Header Analysis</h3>
+                        <div id="sec-headers" class="card-content"></div>
+                    </div>
+                    <div class="card p-4 rounded-xl">
+                        <h3 class="card-title text-lg font-semibold mb-3">Full HTTP Headers</h3>
+                        <div id="headers" class="card-content"></div>
+                    </div>
                 </div>
+
             </div>
         </div>
     </div>
 
     <script>
-        const queryInput = document.getElementById('queryInput');
-        const nameserverInput = document.getElementById('nameserverInput');
-        const checkButton = document.getElementById('checkButton');
-        const backButton = document.getElementById('backButton');
-        const redoIpLookupButton = document.getElementById('redoIpLookupButton');
-        const loader = document.getElementById('loader');
-        const domainResultsDiv = document.getElementById('domainResults');
+        // ---------------------------------------------------------------------------
+        // DOM refs
+        // ---------------------------------------------------------------------------
+        const queryInput          = document.getElementById('queryInput');
+        const nameserverInput     = document.getElementById('nameserverInput');
+        const checkButton         = document.getElementById('checkButton');
+        const backButton          = document.getElementById('backButton');
+        const redoIpLookupButton  = document.getElementById('redoIpLookupButton');
+        const loader              = document.getElementById('loader');
+        const loaderText          = document.getElementById('loaderText');
+        const domainResultsDiv    = document.getElementById('domainResults');
         const reverseIpResultsDiv = document.getElementById('reverseIpResults');
-        const errorMessage = document.getElementById('error-message');
+        const errorMessage        = document.getElementById('error-message');
         const historyAndExportDiv = document.getElementById('historyAndExport');
-        const historyList = document.getElementById('historyList');
-        const copyButton = document.getElementById('copyButton');
-        const downloadButton = document.getElementById('downloadButton');
+        const historyList         = document.getElementById('historyList');
+        const copyButton          = document.getElementById('copyButton');
+        const downloadButton      = document.getElementById('downloadButton');
 
-        let lastIpQuery = null;
+        let lastIpQuery    = null;
         let currentResults = null;
 
-        const showLoader = () => {
+        // ---------------------------------------------------------------------------
+        // Utility: escape HTML to prevent XSS
+        // ---------------------------------------------------------------------------
+        const esc = (str) => {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        };
+
+        // ---------------------------------------------------------------------------
+        // UI state helpers
+        // ---------------------------------------------------------------------------
+        const showLoader = (msg = 'Executing query...') => {
             domainResultsDiv.classList.add('hidden');
             reverseIpResultsDiv.classList.add('hidden');
             historyAndExportDiv.classList.add('hidden');
-            loader.classList.remove('hidden');
             errorMessage.classList.add('hidden');
+            loaderText.textContent = msg;
+            loader.classList.remove('hidden');
+            checkButton.disabled = true;
         };
-        const hideLoader = () => loader.classList.add('hidden');
-        
+
+        const hideLoader = () => {
+            loader.classList.add('hidden');
+            checkButton.disabled = false;
+        };
+
         const showError = (message) => {
             hideLoader();
-            errorMessage.innerHTML = message;
+            errorMessage.innerHTML = message; // allow <strong> in error messages
             errorMessage.classList.remove('hidden');
-        }
+        };
 
+        // ---------------------------------------------------------------------------
+        // Render helpers
+        // ---------------------------------------------------------------------------
+
+        /** Render a list of strings into a <ul> element safely. */
         const renderList = (element, items, messageIfEmpty) => {
             if (items && items.length > 0) {
-                element.innerHTML = items.map(item => `<li><span class="break-all">${item}</span></li>`).join('');
+                element.innerHTML = items
+                    .map(item => `<li><span class="break-all">${esc(item)}</span></li>`)
+                    .join('');
             } else {
-                element.innerHTML = `<li class="list-none text-gray-500">${messageIfEmpty}</li>`;
+                element.innerHTML = `<li class="list-none text-gray-500">${esc(messageIfEmpty)}</li>`;
             }
         };
 
+        /** Render an object as a key-value list safely. */
         const renderKeyValue = (element, data) => {
-            if (data && Object.keys(data).length > 0 && !data.error) {
-                let html = '<ul class="space-y-1">';
-                for (const [key, value] of Object.entries(data)) {
-                    const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                    let displayValue = Array.isArray(value) ? value.join(', ') : value;
-                    displayValue = displayValue || 'N/A';
-                    html += `<li><strong>${displayKey}:</strong> <span class="break-all">${displayValue}</span></li>`;
+            if (!data) {
+                element.innerHTML = '<p class="text-gray-500">No data found.</p>';
+                return;
+            }
+            if (data.error) {
+                element.innerHTML = `<p class="text-red-400 break-all">${esc(data.error)}</p>`;
+                return;
+            }
+            const entries = Object.entries(data);
+            if (entries.length === 0) {
+                element.innerHTML = '<p class="text-gray-500">No data found.</p>';
+                return;
+            }
+            let html = '<ul class="space-y-1">';
+            for (const [key, value] of entries) {
+                const displayKey = esc(key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
+                let displayValue;
+                if (Array.isArray(value)) {
+                    displayValue = value.length > 0
+                        ? value.map(v => `<span class="break-all">${esc(String(v))}</span>`).join(', ')
+                        : '<span class="text-gray-500">None</span>';
+                } else {
+                    displayValue = value
+                        ? `<span class="break-all">${esc(String(value))}</span>`
+                        : '<span class="text-gray-500">N/A</span>';
                 }
-                html += '</ul>';
-                element.innerHTML = html;
-            } else if (data && data.error) {
-                 // --- MODIFIED: Added break-all to the error paragraph ---
-                 element.innerHTML = `<p class="text-red-400 break-all">${data.error}</p>`;
-            } else {
-                element.innerHTML = `<p class="text-gray-500">No data found.</p>`;
+                html += `<li><strong>${displayKey}:</strong> ${displayValue}</li>`;
             }
+            html += '</ul>';
+            element.innerHTML = html;
         };
-        
+
+        /** Render MX PTR records. */
         const renderMxPtr = (element, data) => {
-            if (data && data.length > 0 && !data.error) {
-                let html = '<ul class="space-y-2">';
-                data.forEach(item => {
-                    html += `<li>`;
-                    html += `<strong class="break-all">${item.mail_server}</strong>`;
-                    html += `<ul class="list-disc list-inside ml-4 text-xs">`;
-                    html += `<li><strong>IP:</strong> <span class="break-all">${item.ip}</span></li>`;
-                    html += `<li><strong>PTR:</strong> <span class="break-all">${item.ptr}</span></li>`;
-                    html += `</ul></li>`;
-                });
-                html += '</ul>';
-                element.innerHTML = html;
-            } else if (data && data.error) {
-                 element.innerHTML = `<p class="text-red-400">${data.error}</p>`;
-            } else {
-                element.innerHTML = `<p class="text-gray-500">No MX PTR records found.</p>`;
+            if (!data || data.length === 0) {
+                element.innerHTML = '<p class="text-gray-500">No MX PTR records found.</p>';
+                return;
             }
+            let html = '<ul class="space-y-2">';
+            data.forEach(item => {
+                html += `<li>
+                    <strong class="break-all">${esc(item.mail_server)}</strong>
+                    <ul class="list-disc list-inside ml-4 text-xs">
+                        <li><strong>IP:</strong> <span class="break-all">${esc(item.ip)}</span></li>
+                        <li><strong>PTR:</strong> <span class="break-all">${esc(item.ptr)}</span></li>
+                    </ul>
+                </li>`;
+            });
+            html += '</ul>';
+            element.innerHTML = html;
         };
+
+        /** Render security headers with colour-coded badges. */
+        const renderSecurityHeaders = (element, data) => {
+            if (!data) {
+                element.innerHTML = '<p class="text-gray-500">No data.</p>';
+                return;
+            }
+            let html = '<ul class="space-y-1">';
+            for (const [header, value] of Object.entries(data)) {
+                const isMissing = value === 'Missing';
+                const badgeClass = isMissing ? 'badge-miss' : 'badge-ok';
+                const displayValue = isMissing
+                    ? '<span class="badge-miss">✗ Missing</span>'
+                    : `<span class="badge-ok">✓</span> <span class="break-all text-xs">${esc(value)}</span>`;
+                html += `<li class="text-xs"><strong class="text-gray-300">${esc(header)}:</strong> ${displayValue}</li>`;
+            }
+            html += '</ul>';
+            element.innerHTML = html;
+        };
+
+        /** Render SSL cert info, including SAN list if available. */
+        const renderSslInfo = (element, data) => {
+            if (!data) {
+                element.innerHTML = '<p class="text-gray-500">No SSL data.</p>';
+                return;
+            }
+            if (data.error) {
+                element.innerHTML = `<p class="text-red-400 break-all">${esc(data.error)}</p>`;
+                return;
+            }
+            let html = '<ul class="space-y-1">';
+            const fields = ['issuer_common_name', 'issuer_org', 'subject_common_name', 'expires'];
+            for (const field of fields) {
+                if (data[field] !== undefined) {
+                    const label = esc(field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
+                    html += `<li><strong>${label}:</strong> <span class="break-all">${esc(data[field])}</span></li>`;
+                }
+            }
+            if (data.subject_alt_names && data.subject_alt_names.length > 0) {
+                html += `<li class="mt-2"><strong>Subject Alt Names (${esc(String(data.subject_alt_names.length))}):</strong>
+                    <pre class="bg-gray-900 p-2 rounded text-xs mt-1 max-h-32 overflow-y-auto">${data.subject_alt_names.map(esc).join('\n')}</pre>
+                </li>`;
+            }
+            html += '</ul>';
+            element.innerHTML = html;
+        };
+
+        // ---------------------------------------------------------------------------
+        // Main render functions
+        // ---------------------------------------------------------------------------
 
         const renderDomainResults = (data) => {
             currentResults = data;
             historyAndExportDiv.classList.remove('hidden');
+            backButton.classList.toggle('hidden', !lastIpQuery);
 
-            if (lastIpQuery) {
-                backButton.classList.remove('hidden');
-            } else {
-                backButton.classList.add('hidden');
-            }
             document.getElementById('domainChecked').textContent = data.domain;
+
+            // WHOIS
             renderKeyValue(document.getElementById('whois'), data.whois);
-            const aRecordsDiv = document.getElementById('a-records');
-            aRecordsDiv.innerHTML = `<strong>A (IPv4):</strong><ul class="list-disc list-inside mb-2">${(data.dns.A || []).map(i => `<li><span class="break-all">${i}</span></li>`).join('') || '<li class="list-none text-gray-500">None</li>'}</ul>`;
-            aRecordsDiv.innerHTML += `<strong>AAAA (IPv6):</strong><ul class="list-disc list-inside">${(data.dns.AAAA || []).map(i => `<li><span class="break-all">${i}</span></li>`).join('') || '<li class="list-none text-gray-500">None</li>'}</ul>`;
-            
-            const wwwRecordsDiv = document.getElementById('www-records');
-            wwwRecordsDiv.innerHTML = `<strong>A (www):</strong><ul class="list-disc list-inside mb-2">${(data.dns.A_www || []).map(i => `<li><span class="break-all">${i}</span></li>`).join('') || '<li class="list-none text-gray-500">None</li>'}</ul>`;
-            wwwRecordsDiv.innerHTML += `<strong>CNAME (www):</strong><ul class="list-disc list-inside">${(data.dns.CNAME_www || []).map(i => `<li><span class="break-all">${i}</span></li>`).join('') || '<li class="list-none text-gray-500">None</li>'}</ul>`;
+
+            // A / AAAA records
+            const aDiv = document.getElementById('a-records');
+            aDiv.innerHTML =
+                `<strong>A (IPv4):</strong><ul class="list-disc list-inside mb-2">` +
+                ((data.dns.A || []).map(i => `<li><span class="break-all">${esc(i)}</span></li>`).join('') ||
+                    '<li class="list-none text-gray-500">None</li>') +
+                `</ul><strong>AAAA (IPv6):</strong><ul class="list-disc list-inside">` +
+                ((data.dns.AAAA || []).map(i => `<li><span class="break-all">${esc(i)}</span></li>`).join('') ||
+                    '<li class="list-none text-gray-500">None</li>') +
+                `</ul>`;
+
+            // WWW records
+            const wwwDiv = document.getElementById('www-records');
+            wwwDiv.innerHTML =
+                `<strong>A (www):</strong><ul class="list-disc list-inside mb-2">` +
+                ((data.dns.A_www || []).map(i => `<li><span class="break-all">${esc(i)}</span></li>`).join('') ||
+                    '<li class="list-none text-gray-500">None</li>') +
+                `</ul><strong>CNAME (www):</strong><ul class="list-disc list-inside">` +
+                ((data.dns.CNAME_www || []).map(i => `<li><span class="break-all">${esc(i)}</span></li>`).join('') ||
+                    '<li class="list-none text-gray-500">None</li>') +
+                `</ul>`;
 
             renderList(document.getElementById('nsRecords'), data.dns.NS, 'No NS records found.');
             renderList(document.getElementById('mxRecords'), data.dns.MX, 'No MX records found.');
             renderMxPtr(document.getElementById('mx-ptr'), data.dns.MX_PTR);
             renderList(document.getElementById('soa'), data.dns.SOA, 'No SOA record found.');
             renderKeyValue(document.getElementById('rdns'), data.dns.rDNS);
-            const securityDiv = document.getElementById('security');
-            securityDiv.innerHTML = `<p class="mb-2"><strong>DNSSEC:</strong> ${data.security.DNSSEC || 'N/A'}</p><p class="mb-2"><strong>CAA:</strong></p><pre class="bg-gray-900 p-2 rounded mb-2 text-xs">${(data.security.CAA || ['Not Found']).join('\n')}</pre><p class="mb-2"><strong>SPF:</strong></p><pre class="bg-gray-900 p-2 rounded mb-2 text-xs">${data.security.SPF || 'Not Found'}</pre><p class="mb-2"><strong>DMARC:</strong></p><pre class="bg-gray-900 p-2 rounded mb-2 text-xs">${(data.security.DMARC || ['Not Found']).join('\n')}</pre><p class="mb-2"><strong>DKIM (Common Selectors):</strong></p><pre class="bg-gray-900 p-2 rounded text-xs">${(data.security.DKIM || ['Not Found']).join('\n\n')}</pre>`;
-            renderKeyValue(document.getElementById('ssl'), data.server.ssl_info);
+
+            // Security records
+            const secDiv = document.getElementById('security');
+            secDiv.innerHTML =
+                `<p class="mb-2"><strong>DNSSEC:</strong> ${esc(data.security.DNSSEC || 'N/A')}</p>` +
+                `<p class="mb-1"><strong>CAA:</strong></p>` +
+                `<pre class="bg-gray-900 p-2 rounded mb-2 text-xs">${esc((data.security.CAA || ['Not Found']).join('\n'))}</pre>` +
+                `<p class="mb-1"><strong>SPF:</strong></p>` +
+                `<pre class="bg-gray-900 p-2 rounded mb-2 text-xs">${esc(data.security.SPF || 'Not Found')}</pre>` +
+                `<p class="mb-1"><strong>DMARC:</strong></p>` +
+                `<pre class="bg-gray-900 p-2 rounded mb-2 text-xs">${esc((data.security.DMARC || ['Not Found']).join('\n'))}</pre>` +
+                `<p class="mb-1"><strong>DKIM (Common Selectors):</strong></p>` +
+                `<pre class="bg-gray-900 p-2 rounded text-xs max-h-40 overflow-y-auto">${esc((data.security.DKIM || ['Not Found']).join('\n\n'))}</pre>`;
+
+            renderSslInfo(document.getElementById('ssl'), data.server.ssl_info);
             renderKeyValue(document.getElementById('tech'), data.server.technologies);
-            renderKeyValue(document.getElementById('sec-headers'), data.server.security_headers);
+            renderSecurityHeaders(document.getElementById('sec-headers'), data.server.security_headers);
+
+            // Full HTTP headers
             const headersDiv = document.getElementById('headers');
             if (data.server && !data.server.error) {
-                let headersHtml = `<p class="mb-1"><strong>Protocol:</strong> <span class="uppercase">${data.server.protocol}</span></p><p class="mb-1"><strong>Status:</strong> ${data.server.status_code}</p><p class="mb-2"><strong>Final URL:</strong> <span class="break-all">${data.server.final_url}</span></p><strong>Headers:</strong><pre class="bg-gray-900 p-2 rounded text-xs mt-1 h-48 overflow-y-auto">${Object.entries(data.server.headers).map(([key, value]) => `<strong>${key}:</strong> ${value}`).join('\n')}</pre>`;
-                headersDiv.innerHTML = headersHtml;
+                const headerLines = Object.entries(data.server.headers || {})
+                    .map(([k, v]) => `${esc(k)}: ${esc(v)}`)
+                    .join('\n');
+                headersDiv.innerHTML =
+                    `<p class="mb-1"><strong>Protocol:</strong> <span class="uppercase">${esc(data.server.protocol)}</span></p>` +
+                    `<p class="mb-1"><strong>Status:</strong> ${esc(String(data.server.status_code))}</p>` +
+                    `<p class="mb-2"><strong>Final URL:</strong> <span class="break-all">${esc(data.server.final_url)}</span></p>` +
+                    `<strong>Headers:</strong><pre class="bg-gray-900 p-2 rounded text-xs mt-1 h-48 overflow-y-auto">${headerLines}</pre>`;
             } else {
                 renderKeyValue(headersDiv, data.server);
             }
+
             hideLoader();
             domainResultsDiv.classList.remove('hidden');
         };
@@ -277,29 +474,39 @@
             historyAndExportDiv.classList.remove('hidden');
             document.getElementById('ipChecked').textContent = query;
             redoIpLookupButton.classList.remove('hidden');
-            const listElement = document.getElementById('hostnameList');
-            listElement.innerHTML = '';
-            const isErrorOrEmpty = !hostnames || hostnames.length === 0 || hostnames[0].startsWith('API Error') || hostnames[0] === 'No DNS A records found';
 
-            if (!isErrorOrEmpty) {
+            const listEl = document.getElementById('hostnameList');
+            listEl.innerHTML = '';
+
+            const isError = !hostnames || hostnames.length === 0 ||
+                hostnames[0].startsWith('API Error') ||
+                hostnames[0].startsWith('Request failed') ||
+                hostnames[0] === 'No DNS A records found';
+
+            if (!isError) {
                 hostnames.forEach(hostname => {
                     const li = document.createElement('li');
-                    const button = document.createElement('button');
-                    button.textContent = hostname;
-                    button.className = 'text-[#f41c2c] hover:underline cursor-pointer';
-                    button.onclick = () => {
-                        performCheck(hostname);
-                    };
-                    li.appendChild(button);
-                    listElement.appendChild(li);
+                    const btn = document.createElement('button');
+                    btn.textContent = hostname;         // textContent — safe
+                    btn.className = 'text-[#f41c2c] hover:underline cursor-pointer';
+                    btn.addEventListener('click', () => performCheck(hostname));
+                    li.appendChild(btn);
+                    listEl.appendChild(li);
                 });
             } else {
-                listElement.innerHTML = `<li class="text-gray-500">${hostnames[0] || 'No hostnames found for this IP.'}</li>`;
+                const li = document.createElement('li');
+                li.className = 'text-gray-500';
+                li.textContent = hostnames[0] || 'No hostnames found for this IP.';
+                listEl.appendChild(li);
             }
+
             hideLoader();
             reverseIpResultsDiv.classList.remove('hidden');
         };
 
+        // ---------------------------------------------------------------------------
+        // History (localStorage)
+        // ---------------------------------------------------------------------------
         const updateHistory = (query) => {
             let history = JSON.parse(localStorage.getItem('dimHistory') || '[]');
             history = history.filter(item => item !== query);
@@ -310,112 +517,132 @@
         };
 
         const renderHistory = () => {
-            let history = JSON.parse(localStorage.getItem('dimHistory') || '[]');
+            const history = JSON.parse(localStorage.getItem('dimHistory') || '[]');
             historyList.innerHTML = '';
             history.forEach(item => {
-                const button = document.createElement('button');
-                button.textContent = item;
-                button.className = 'text-gray-400 hover:text-[#f41c2c] mr-2 underline decoration-dotted';
-                button.onclick = () => performCheck(item);
-                historyList.appendChild(button);
+                const btn = document.createElement('button');
+                btn.textContent = item;   // textContent — safe
+                btn.className = 'text-gray-400 hover:text-[#f41c2c] mr-2 underline decoration-dotted';
+                btn.addEventListener('click', () => performCheck(item));
+                historyList.appendChild(btn);
             });
         };
 
+        // ---------------------------------------------------------------------------
+        // Core check function
+        // ---------------------------------------------------------------------------
+
+        /** Simple, conservative test for whether a string looks like an IP address. */
+        const looksLikeIp = (str) => /^(\d{1,3}\.){3}\d{1,3}$/.test(str) || /^[0-9a-fA-F:]{2,39}$/.test(str);
+
         const performCheck = async (queryOverride, forceRefresh = false) => {
-            let query = queryOverride || queryInput.value.trim();
+            const query = (queryOverride || queryInput.value.trim());
             if (!query) {
                 showError('Target query required.');
                 return;
             }
-            
+
+            // Update the input to reflect what we're scanning
             if (!queryOverride) {
-                const isIp = /^[0-9a-fA-F:.]+$/.test(query);
-                if (!isIp) {
-                    lastIpQuery = null;
-                }
+                if (!looksLikeIp(query)) lastIpQuery = null;
             }
 
-            const cachedResult = sessionStorage.getItem(query);
-            if (cachedResult && !forceRefresh) {
-                const data = JSON.parse(cachedResult);
-                if (data.type === 'ip_lookup') {
-                    console.log("Serving reverse IP lookup from cache.");
-                    lastIpQuery = query;
-                    domainResultsDiv.classList.add('hidden');
-                    renderIpLookupResults(query, data.hostnames);
-                    return; 
+            // Session cache (domain results are not cached — only IP lookups)
+            const cacheKey = `dim:${query}`;
+            if (!forceRefresh) {
+                const cached = sessionStorage.getItem(cacheKey);
+                if (cached) {
+                    try {
+                        const data = JSON.parse(cached);
+                        if (data.type === 'ip_lookup') {
+                            lastIpQuery = query;
+                            domainResultsDiv.classList.add('hidden');
+                            showLoader('Loading cached results...');
+                            renderIpLookupResults(query, data.hostnames);
+                            return;
+                        }
+                    } catch (_) { /* corrupted cache — fall through */ }
                 }
             }
 
             const nameserver = nameserverInput.value.trim() || '9.9.9.9';
-            showLoader();
+            showLoader(looksLikeIp(query) ? 'Running reverse IP lookup...' : `Scanning ${query}...`);
 
             try {
                 const url = new URL('/check', window.location.origin);
-                url.searchParams.append('query', query);
-                url.searchParams.append('nameserver', nameserver);
+                url.searchParams.set('query', query);
+                url.searchParams.set('nameserver', nameserver);
+
                 const response = await fetch(url);
-                
-                if (!response.ok) throw new Error(`Server returned error: ${response.status}`);
-                
+
+                if (!response.ok) {
+                    let errMsg = `Server returned HTTP ${response.status}.`;
+                    try {
+                        const errData = await response.json();
+                        if (errData.error) errMsg = esc(errData.error);
+                    } catch (_) {}
+                    throw new Error(errMsg);
+                }
+
                 const data = await response.json();
                 updateHistory(query);
 
                 if (data.type === 'ip_lookup') {
                     lastIpQuery = query;
-                    sessionStorage.setItem(query, JSON.stringify(data));
+                    sessionStorage.setItem(cacheKey, JSON.stringify(data));
                     renderIpLookupResults(query, data.hostnames);
                 } else if (data.type === 'domain_check') {
                     renderDomainResults(data.data);
+                } else {
+                    throw new Error('Unexpected response type from server.');
                 }
 
             } catch (error) {
-                console.error('Fetch error:', error);
-                showError(`Connection refused. Is the local Python server running?<br><br><strong>Details:</strong> ${error.message}`);
+                showError(
+                    `<strong>Error:</strong> ${error.message}<br><br>` +
+                    `<span class="text-gray-400 text-sm">If this is a connection error, make sure the Python backend is running on port 4500.</span>`
+                );
             }
         };
 
-        copyButton.addEventListener('click', () => {
-            if (currentResults) {
-                navigator.clipboard.writeText(JSON.stringify(currentResults, null, 2));
-                copyButton.textContent = "// Copied!";
-                setTimeout(() => { copyButton.textContent = "// Copy Results"; }, 2000);
-            }
-        });
-
-        downloadButton.addEventListener('click', () => {
-            if (currentResults) {
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentResults, null, 2));
-                const downloadAnchorNode = document.createElement('a');
-                downloadAnchorNode.setAttribute("href", dataStr);
-                downloadAnchorNode.setAttribute("download", `${currentResults.domain || currentResults.query}_results.json`);
-                document.body.appendChild(downloadAnchorNode);
-                downloadAnchorNode.click();
-                downloadAnchorNode.remove();
-            }
-        });
-
+        // ---------------------------------------------------------------------------
+        // Event listeners
+        // ---------------------------------------------------------------------------
         checkButton.addEventListener('click', () => performCheck());
+        queryInput.addEventListener('keyup', e => { if (e.key === 'Enter') performCheck(); });
+        nameserverInput.addEventListener('keyup', e => { if (e.key === 'Enter') performCheck(); });
+
         backButton.addEventListener('click', () => {
-            if (lastIpQuery) {
-                performCheck(lastIpQuery);
-            }
+            if (lastIpQuery) performCheck(lastIpQuery);
         });
+
         redoIpLookupButton.addEventListener('click', () => {
-             if (lastIpQuery) {
-                sessionStorage.removeItem(lastIpQuery);
+            if (lastIpQuery) {
+                sessionStorage.removeItem(`dim:${lastIpQuery}`);
                 performCheck(lastIpQuery, true);
             }
         });
 
-        queryInput.addEventListener('keyup', (event) => {
-            if (event.key === 'Enter') performCheck();
-        });
-        nameserverInput.addEventListener('keyup', (event) => {
-            if (event.key === 'Enter') performCheck();
+        copyButton.addEventListener('click', () => {
+            if (!currentResults) return;
+            navigator.clipboard.writeText(JSON.stringify(currentResults, null, 2)).then(() => {
+                const orig = copyButton.textContent;
+                copyButton.textContent = '// Copied!';
+                setTimeout(() => { copyButton.textContent = orig; }, 2000);
+            });
         });
 
-        // Initial render of history on page load
+        downloadButton.addEventListener('click', () => {
+            if (!currentResults) return;
+            const blob = new Blob([JSON.stringify(currentResults, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `${currentResults.domain || currentResults.query}_results.json`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        });
+
+        // Init
         renderHistory();
     </script>
 </body>
