@@ -1,195 +1,269 @@
 # Domain Intel Matrix
 
-A self-hosted, web-based domain intelligence tool powered by a Python Flask backend. This application provides a comprehensive overview of a domain's configuration, including WHOIS data, DNS records, SSL certificate information, and server headers, all presented in a clean, dark-themed interface.
+A self-hosted, web-based domain intelligence tool powered by a Python Flask backend. This application provides a comprehensive overview of a domain's configuration, including WHOIS data, DNS records, SSL certificate information, HTTP headers, CDN/technology detection, and email security records — all presented in a clean, dark-themed interface.
 
 ---
 
 ## Features
 
-- **WHOIS Lookup**: Get registrar, creation date, and expiration date.
-- **Comprehensive DNS Records**: A, AAAA, CNAME, NS, MX, SOA, and rDNS.
-- **Security Auditing**: Checks for SPF, DMARC, CAA, DNSSEC, DKIM, and PTR records.
-- **SSL Certificate Info**: Displays the certificate issuer, subject, and expiration date.
-- **Server Headers**: Inspects HTTP headers from the target server.
-- **Web Interface**: A modern, dark-themed UI for easy viewing of results.
-- **Pick a custom DNS server**: Also supports ports! (eg. 127.0.0.1:5335)
-- **Reverse IP lookups**: Currently limited to IPv4 due to API limitations. Lookups use the free endpoint by default but can optionally [use an API key](https://github.com/NullAngst/Domain-Intel-Matrix/edit/main/README.md#api-key).
-- **Systemd Service**: Can be configured to run as a background service that starts on boot.
-- **Easy to run in Docker**
+- **WHOIS Lookup** — Registrar, creation date, expiration date, and name servers.
+- **Comprehensive DNS Records** — A, AAAA, CNAME, NS, MX, SOA, and rDNS.
+- **Email Security Auditing** — SPF, DMARC, DKIM (10 common selectors), and PTR records for MX hosts.
+- **Security Record Checks** — CAA, DNSSEC, and PTR.
+- **SSL Certificate Info** — Issuer, subject, expiration date, issuer org, and Subject Alternative Names (SANs).
+- **Security Header Analysis** — Colour-coded badges for HSTS, CSP, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, CORP, and COOP.
+- **Technology & CDN Detection** — Identifies WordPress, Next.js, Nuxt, Ghost, Joomla, Drupal, Shopify, and CDN providers (Cloudflare, CloudFront, Fastly, Akamai, Varnish).
+- **Full HTTP Header Inspection** — Protocol, status code, final URL (after redirects), and raw headers.
+- **Reverse IP Lookup** — Finds hostnames sharing an IP (IPv4 only). Click any hostname to run a full domain scan on it.
+- **Custom DNS Resolver** — Supports custom nameservers with optional port (e.g. `127.0.0.1:5335`) and IPv6 resolvers.
+- **Query History** — Persists the last 10 queries in your browser's `localStorage`.
+- **Export Results** — Copy to clipboard or download as a JSON file.
+- **Modern Dark UI** — Sticky search bar, colour-coded security badges, scrollable pre blocks, XSS-safe rendering.
+- **Easy Deployment** — Runs as a systemd service or in Docker.
 
 ---
 
 ## Prerequisites
 
 - Python 3.8 or newer
-- `python3-venv` package for creating virtual environments ([or run it in Docker](https://github.com/NullAngst/Domain-Intel-Matrix/edit/main/README.md#optionally-run-this-in-docker_)).
-- `sudo` privileges.
+- `python3-venv` for creating virtual environments ([or run in Docker](#optionally-run-this-in-docker))
+- `sudo` privileges (required for systemd setup only)
 
 ---
 
 ## Setup Instructions
 
-These instructions will guide you through setting up the application in the `/home/$USER/checker` directory and running it as a systemd service.
+These instructions set up the application in `/home/$USER/checker` and run it as a systemd service.
 
 ### 1. Prepare the System and Project Files
 
-First, update your package list and install the Python virtual environment package.
-
-```
+```bash
 sudo apt update
 sudo apt install python3-venv -y
 ```
 
-Next, create the project directory and navigate into it.
-```
+Create the project directory and place the application files inside it:
+
+```bash
 mkdir -p /home/$USER/checker
 cd /home/$USER/checker
+# Copy checker_backend.py and checker_frontend.html here
 ```
-Place the two application files, checker_backend.py and checker_frontend.html, inside this directory.
+
 ### 2. Create `requirements.txt`
 
-Create a file to list the Python dependencies.
-
-`nano requirements.txt`
-
-Add the following lines to the file, then save and exit (Ctrl+X, then Y, then Enter):
-```
+```bash
+cat > requirements.txt << 'EOF'
 Flask
 Flask-Cors
 dnspython
 python-whois
 requests
 ipaddress
+EOF
 ```
+
 ### 3. Set Up the Virtual Environment
-`python3 -m venv venv`
 
-### Activate the environment
-`source venv/bin/activate`
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
 
-### Install dependencies
-`pip install -r requirements.txt`
+### 4. (Optional) Configure an API Key
+
+For reverse IP lookups, create a `config.py` in the project directory:
+
+```python
+HACKERTARGET_API_KEY = "your_api_key_here"
+```
+
+Without a key the free HackerTarget tier is used (rate-limited). See [API Key](#api-key) for details.
+
+---
 
 ## Running as a Systemd Service (Recommended)
 
-This setup will ensure the application starts automatically on boot and runs reliably in the background.
-### 1. Create the Systemd Service File
+### 1. Create the Service File
 
-Use a text editor to create a service configuration file for systemd.
-
-`sudo nano /etc/systemd/system/checker.service`
-
-Copy and paste the following configuration into the file. This defines how the service should be run.
+```bash
+sudo nano /etc/systemd/system/checker.service
 ```
+
+Paste the following, replacing `$USER` with your actual username:
+
+```ini
 [Unit]
 Description=Domain Intel Matrix Flask Application
 After=network.target
 
 [Service]
-# Replace '$USER' with your actual username if it's different
 User=$USER
 Group=$USER
-
-# The directory where your files are located
 WorkingDirectory=/home/$USER/checker
-
-# The command to start the application
-# Note: We use the Python executable from our virtual environment
 ExecStart=/home/$USER/checker/venv/bin/python /home/$USER/checker/checker_backend.py
-
-# Restart the service if it fails
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
 ```
-Save and exit the editor.
-### 2. Manage and Enable the Service
 
-Reload the systemd daemon to recognize the new service, then start and enable it.
+### 2. Enable and Start the Service
 
-### Reload systemd to apply changes
-`sudo systemctl daemon-reload`
+```bash
+sudo systemctl daemon-reload
+sudo systemctl start checker.service
+sudo systemctl enable checker.service
+```
 
-### Start the service now
-`sudo systemctl start checker.service`
+### 3. Verify
 
-### Enable the service to start automatically on boot
-`sudo systemctl enable checker.service`
+```bash
+sudo systemctl status checker.service
+```
 
-### 3. Verify the Service Status
+You should see `active (running)`. Press `q` to exit.
 
-Check that the service is running correctly.
-
-`sudo systemctl status checker.service`
-
-You should see an output with active (running). Press q to exit.
+---
 
 ## Firewall Configuration
 
-If you are using a firewall like UFW, you must allow traffic on the port the application uses (port 4500 in this case).
+If you use UFW, allow port 4500:
 
-`sudo ufw allow 4500/tcp`
-
-Usage
-
-Once the service is running, you can access the Domain Intel Matrix from any device on your local network by navigating to:
-
-`http://<your_server_ip>:4500`
-
-Replace <your_server_ip> with the local IP address of the machine running the application. You can find this IP by running `ip addr show` on the server.
-
-## Optionally, run this in Docker
-*This assumes you are already running Docker and have at least some working knowledge of it.*
-
-### 1. Clone the contents of this repo (or just download each file) to the location where you'd like to run it.
-
-### 2. In the same directory, make a Dockerfile with the following contents (adjust to your environment as needed).
+```bash
+sudo ufw allow 4500/tcp
 ```
-# Use an official Python runtime as a parent image
+
+---
+
+## Usage
+
+Once running, open a browser and navigate to:
+
+```
+http://<your_server_ip>:4500
+```
+
+Replace `<your_server_ip>` with the machine's local IP address (`ip addr show`). On the same machine you can use `http://127.0.0.1:4500`.
+
+**Supported query types:**
+- `example.com` — full domain scan
+- `https://example.com/some/path` — URL is automatically stripped to the hostname
+- `192.0.2.1` — reverse IP lookup (IPv4 only)
+
+---
+
+## Optionally, Run This in Docker
+
+*This assumes Docker is already installed.*
+
+### 1. Clone or download the project files into a directory.
+
+### 2. Create a `Dockerfile` in the same directory:
+
+```dockerfile
 FROM python:3.13-slim
 
-# Set the working directory in the container
 WORKDIR /usr/src/app
 
-# Copy the current directory contents into the container at /usr/src/app
 COPY . .
 
-# Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Make port 4500 available to the world outside this container.
 EXPOSE 4500
 
-# Run checker_backend.py when the container launches
 CMD ["python", "./checker_backend.py"]
 ```
 
-### 3. Create a new text file named requirements.txt with the same contents [as listed above](https://github.com/NullAngst/Domain-Intel-Matrix#2-create-requirementstxt).
+### 3. Build the image:
 
-### 4. While in the directory with the files, run `docker build -t domain-intel-matrix/latest .`
-*domain-intel-matrix/latest can be replaced with whatever name you like.*
-
-This command will build a simple Docker image that contains the files in the current directory, a copy of Python (and this app's dependencies). The container will start the python file at startup.
-
-### 5. Use Docker run or Docker Compose to create a container based on the image that was just created.
-`docker run -p 4500:4500 --restart unless-stopped domain-intel-matrix/latest`
-
+```bash
+docker build -t domain-intel-matrix:latest .
 ```
+
+### 4. Run the container:
+
+```bash
+docker run -p 4500:4500 --restart unless-stopped domain-intel-matrix:latest
+```
+
+### 5. (Optional) Docker Compose
+
+Create a `docker-compose.yml`:
+
+```yaml
 services:
   dim:
-    image: domain-intel-matrix/latest
+    image: domain-intel-matrix:latest
     ports:
-      - 4500:4500
+      - "4500:4500"
     restart: unless-stopped
 ```
-You may want to attach it to a network you have already configured also. If you changed the name specified in the build command, you'll need to change it here too.
+
+Then run:
+
+```bash
+docker compose up -d
+```
+
+---
 
 ## API Key
-If you have an API key for Hacker Target insert it into a file named config.py with the following syntax:
 
-`HACKERTARGET_API_KEY = "YOUR_API_KEY_HERE"`
+Reverse IP lookups use the [HackerTarget API](https://hackertarget.com/ip-tools/). Without a key, the free tier applies (limited requests per day).
 
-If we assume your API key is key123 the file should look like this:
+To add a key, create `config.py` in the project directory:
 
-`HACKERTARGET_API_KEY = "key123"`
+```python
+HACKERTARGET_API_KEY = "your_api_key_here"
+```
+
+The backend loads this file automatically on startup. If the file is absent or the key is the placeholder value, the free tier is used and a warning is logged.
+
+---
+
+## Configuration
+
+The backend has a single toggle at the top of `checker_backend.py`:
+
+| Variable         | Default | Description                                      |
+|------------------|---------|--------------------------------------------------|
+| `VERBOSE_LOGGING`| `False` | Set to `True` for detailed debug output to stdout |
+
+---
+
+## Security Notes
+
+- **Network exposure** — By default the server binds to `0.0.0.0:4500`, making it reachable on your local network. Do **not** expose this port to the public internet without adding authentication.
+- **SSRF mitigations** — The backend validates domain inputs and rejects `localhost`, `.local`, and `.internal` hostnames.
+- **Output escaping** — All data returned by the API is HTML-escaped in the frontend before being inserted into the DOM, preventing XSS.
+- **No persistent storage** — The backend stores nothing. All query history lives in your browser's `localStorage`.
+
+---
+
+## Changelog
+
+### v2.0
+- **Bug fixes**
+  - Fixed URL parsing: scheme, path, query string, and port are now all correctly stripped before DNS/HTTP queries.
+  - Fixed WHOIS `name_servers` field: lists/sets are now normalised and deduplicated before JSON serialisation.
+  - Fixed MX PTR resolution: trailing dots are stripped from MX hostnames before A-record lookups.
+  - Fixed `performCheck` IP detection: tighter regex prevents non-IP strings matching.
+  - Fixed `renderIpLookupResults` back button: button is now correctly toggled for IP scan context.
+  - Fixed session cache key collision: cache keys are now prefixed with `dim:`.
+- **Security**
+  - All dynamic values are HTML-escaped in the frontend (`esc()` helper) to prevent XSS.
+  - Domain input validation on the backend rejects `localhost` and RFC-reserved local names.
+- **New features**
+  - SOA records now include Refresh, Retry, Expire, and Minimum TTL fields.
+  - SSL info now includes Issuer Organisation and Subject Alternative Names (capped at 10).
+  - Security headers now show colour-coded badges (green ✓ / red ✗) with value previews.
+  - Technology detection extended: Next.js, Nuxt.js, Ghost, Shopify, Cloudflare, CloudFront, Fastly, Akamai, Varnish, and more.
+  - Added 5 more DKIM selectors: `protonmail`, `zoho`.
+  - Added 2 new security headers: `Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy`.
+  - Loader message now reflects the query type (domain vs IP).
+  - Scan button is disabled while a request is in flight.
+  - HTTP requests now use a shared session with a descriptive User-Agent.
+  - `downloadButton` uses `URL.createObjectURL` (avoids data-URI length limits on large results).
+  - Added `autocomplete="off"`, `autocapitalize="off"`, `spellcheck="false"` to query inputs.
