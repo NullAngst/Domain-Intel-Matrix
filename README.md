@@ -179,13 +179,13 @@ CMD ["python", "./checker_backend.py"]
 ### 3. Build the image:
 
 ```bash
-docker build -t domain-intel-matrix:latest .
+docker build -t nullangst/domain-intel-matrix:latest .
 ```
 
 ### 4. Run the container:
 
 ```bash
-docker run -p 4500:4500 --restart unless-stopped domain-intel-matrix:latest
+docker run -p 4500:4500 --restart unless-stopped nullangst/domain-intel-matrix:latest
 ```
 
 ### 5. (Optional) Docker Compose
@@ -195,7 +195,7 @@ Create a `docker-compose.yml`:
 ```yaml
 services:
   dim:
-    image: domain-intel-matrix:latest
+    image: nullangst/domain-intel-matrix:latest
     ports:
       - "4500:4500"
     restart: unless-stopped
