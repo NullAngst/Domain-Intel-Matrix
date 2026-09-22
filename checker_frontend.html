@@ -1,649 +1,510 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Domain Intel Matrix</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📡</text></svg>">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&family=Exo+2:wght@600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Roboto Mono', monospace;
-            background-color: #0d1117;
-            color: #c9d1d9;
-        }
-        .font-display { font-family: 'Exo 2', sans-serif; }
-        .loader {
-            border-color: rgba(0, 255, 255, 0.2);
-            border-top-color: #f41c2c;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Domain Intel Matrix</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230d1117'/><path d='M6 22a10 10 0 0 1 20 0M11 22a5 5 0 0 1 10 0' stroke='%23f41c2c' stroke-width='3' fill='none'/><circle cx='16' cy='22' r='2.5' fill='%23f41c2c'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&family=Exo+2:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d1117; --panel: #161b22; --line: #30363d; --text: #c9d1d9;
+  --muted: #8b949e; --dim: #6e7681; --accent: #f41c2c;
+  --ok: #3fb950; --warn: #d29922; --bad: #f85149;
+  --mono: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --display: 'Exo 2', system-ui, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; font-family: var(--mono); background: var(--bg); color: var(--text); line-height: 1.5; }
+.hidden { display: none !important; }
+.wrap { max-width: 80rem; margin: 0 auto; padding: 1rem; }
+@media (min-width: 640px) { .wrap { padding: 2rem; } }
+header { text-align: center; margin-bottom: 2rem; }
+h1 { font-family: var(--display); font-size: clamp(2rem, 6vw, 3rem); margin: 0; color: #f0f6fc; }
+.tag { color: var(--accent); margin-top: .5rem; }
+h2 { font-family: var(--display); font-size: 1.5rem; margin: 0; overflow-wrap: anywhere; }
+h2 span { color: var(--accent); }
 
-        .card {
-            background-color: #161b22;
-            border: 1px solid #30363d;
-            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-        }
-        .card:hover {
-            border-color: #f41c2c;
-            box-shadow: 0 0 15px rgba(244, 28, 44, 0.2);
-        }
-        .card-title {
-            color: #f41c2c;
-            font-family: 'Exo 2', sans-serif;
-            text-shadow: 0 0 5px rgba(244, 28, 44, 0.5);
-        }
-        .card-content { color: #8b949e; }
-        .card-list { list-style-position: inside; list-style-type: '» '; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: .75rem; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 10px 25px rgba(0,0,0,.35); }
+.search { position: sticky; top: 1rem; z-index: 10; }
+.row { display: flex; flex-direction: column; gap: 1rem; }
+.row-sub { display: flex; gap: 1rem; }
+@media (min-width: 640px) { .row { flex-direction: row; align-items: center; } }
+input[type=text] {
+  width: 100%; padding: .75rem 1rem; font: inherit; font-size: 1.1rem; color: #e6edf3;
+  background: var(--bg); border: 2px solid var(--line); border-radius: .5rem; transition: border-color .15s;
+}
+#queryInput { flex: 1; }
+#nameserverInput { width: 100%; }
+@media (min-width: 640px) { #nameserverInput { width: 13rem; } }
+input[type=text]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(244,28,44,.35); }
 
-        .btn-scan {
-            background-color: #f41c2c;
-            color: #0d1117;
-            font-family: 'Exo 2', sans-serif;
-            transition: box-shadow 0.2s ease-in-out, opacity 0.2s ease-in-out;
-        }
-        .btn-scan:hover { box-shadow: 0 0 20px #f41c2c; }
-        .btn-scan:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+.btn {
+  font-family: var(--display); font-weight: 600; background: var(--accent); color: var(--bg);
+  border: 0; border-radius: .5rem; padding: .75rem 2rem; cursor: pointer; transition: box-shadow .2s, opacity .2s;
+}
+.btn:hover { box-shadow: 0 0 20px var(--accent); }
+.btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+.btn-sm { font-size: .8rem; padding: .5rem 1rem; }
+.btn-md { font-size: .9rem; padding: .5rem 1.5rem; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-        strong { color: #c9d1d9; }
-        pre {
-            background-color: #0d1117 !important;
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
+.err { color: var(--bad); margin-top: .75rem; font-weight: 500; }
+.err small { display: block; color: var(--muted); margin-top: .5rem; font-weight: 400; }
+.gh { text-align: center; margin: -1rem 0 2rem; }
+.gh a { color: var(--dim); font-size: .875rem; text-decoration: none; }
+.gh a:hover { color: var(--accent); }
 
-        /* Security header status badges */
-        .badge-ok   { color: #3fb950; }
-        .badge-warn { color: #d29922; }
-        .badge-miss { color: #f85149; }
-    </style>
+.loader-wrap { text-align: center; margin: 3rem 0; }
+.loader { width: 6rem; height: 6rem; margin: 0 auto; border-radius: 50%; border: 8px solid rgba(0,255,255,.2); border-top-color: var(--accent); animation: spin 1s linear infinite; }
+.loader-wrap p { color: var(--accent); letter-spacing: .1em; margin-top: 1rem; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .loader { animation-duration: 3s; } }
+
+.bar { display: flex; flex-direction: column; gap: 1rem; justify-content: space-between; align-items: center; padding: 1rem; }
+@media (min-width: 640px) { .bar { flex-direction: row; } }
+.history { display: flex; flex-wrap: wrap; gap: .25rem .5rem; align-items: center; }
+.history .label { color: var(--muted); }
+.linkbtn { background: none; border: 0; padding: 0; font: inherit; color: var(--muted); cursor: pointer; text-decoration: underline dotted; }
+.linkbtn:hover { color: var(--accent); }
+.hostbtn { color: var(--accent); text-decoration: none; }
+.hostbtn:hover { text-decoration: underline; }
+.actions { display: flex; gap: .5rem; flex-shrink: 0; }
+
+.results-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+@media (min-width: 768px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .grid { grid-template-columns: repeat(4, 1fr); } }
+.col { display: flex; flex-direction: column; gap: 1.5rem; min-width: 0; }
+
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: .75rem; padding: 1rem; transition: border-color .2s, box-shadow .2s; min-width: 0; }
+.card:hover { border-color: var(--accent); box-shadow: 0 0 15px rgba(244,28,44,.2); }
+.card h3 { color: var(--accent); font-family: var(--display); font-size: 1.1rem; margin: 0 0 .75rem; text-shadow: 0 0 5px rgba(244,28,44,.5); }
+.card-content { color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; }
+.card-content ul { margin: 0 0 .5rem; padding: 0; list-style: none; }
+.card-content li { margin-bottom: .25rem; }
+.card-content ul.chev li::before { content: '» '; }
+.card-content ul.dots li::before { content: '\2022  '; }
+.card-content ul.sub { margin-left: 1rem; font-size: .8rem; }
+.card-content p { margin: 0 0 .5rem; }
+strong { color: var(--text); font-weight: 500; }
+.none { color: var(--dim); }
+.ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+.xs { font-size: .8rem; }
+pre {
+  background: #0a0d12; border: 1px solid var(--line); border-radius: .375rem; padding: .5rem; margin: .25rem 0 .75rem;
+  font: inherit; font-size: .75rem; white-space: pre-wrap; word-break: break-all; max-height: 12rem; overflow-y: auto;
+}
+</style>
 </head>
-<body class="min-h-screen">
+<body>
+<div class="wrap">
+  <header>
+    <h1>Domain Intel Matrix</h1>
+    <p class="tag">// Local Backend Active</p>
+  </header>
 
-    <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-7xl">
-
-        <header class="text-center mb-8">
-            <h1 class="text-4xl sm:text-5xl font-bold text-gray-100 font-display">Domain Intel Matrix</h1>
-            <p class="text-[#f41c2c] mt-2">// Local Backend Active</p>
-        </header>
-
-        <!-- Input Section -->
-        <div class="bg-[#161b22] border border-[#30363d] p-6 rounded-xl shadow-lg mb-8 sticky top-4 z-10">
-            <div class="flex flex-col sm:flex-row gap-4 items-center">
-                <input type="text" id="queryInput"
-                    placeholder="domain.tld or IP address"
-                    autocomplete="off" autocapitalize="off" spellcheck="false"
-                    class="flex-grow w-full px-4 py-3 text-lg bg-[#0d1117] border-2 border-[#30363d] rounded-lg
-                           focus:outline-none focus:ring-2 focus:ring-[#f41c2c] focus:border-[#f41c2c] transition text-gray-200">
-                <div class="flex w-full sm:w-auto gap-4">
-                    <input type="text" id="nameserverInput" value="9.9.9.9"
-                        title="DNS Resolver (e.g. 9.9.9.9, 1.1.1.1, 127.0.0.1:5335)"
-                        placeholder="DNS resolver"
-                        autocomplete="off" spellcheck="false"
-                        class="w-full sm:w-52 px-4 py-3 text-lg bg-[#0d1117] border-2 border-[#30363d] rounded-lg
-                               focus:outline-none focus:ring-2 focus:ring-[#f41c2c] focus:border-[#f41c2c] transition text-gray-200">
-                    <button id="checkButton" class="w-full sm:w-auto btn-scan font-semibold px-8 py-3 rounded-lg">
-                        SCAN
-                    </button>
-                </div>
-            </div>
-            <div id="error-message" class="text-red-400 mt-3 font-medium hidden"></div>
-        </div>
-
-        <div class="text-center -mt-4 mb-8">
-            <a href="https://github.com/NullAngst/Domain-Intel-Matrix" target="_blank" rel="noopener noreferrer"
-               class="text-gray-500 hover:text-[#f41c2c] transition-colors text-sm">
-                // View on GitHub
-            </a>
-        </div>
-
-        <!-- Loading Spinner -->
-        <div id="loader" class="text-center my-12 hidden">
-            <div class="loader ease-linear rounded-full border-8 h-24 w-24 mx-auto"></div>
-            <p class="mt-4 text-[#f41c2c] tracking-widest" id="loaderText">Executing query...</p>
-        </div>
-
-        <!-- History and Export Section -->
-        <div id="historyAndExport" class="hidden bg-[#161b22] border border-[#30363d] p-4 rounded-xl shadow-lg mb-8">
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div id="historyContainer" class="flex flex-wrap gap-1 items-center">
-                    <span class="text-gray-400 mr-2 shrink-0">// History:</span>
-                    <span id="historyList"></span>
-                </div>
-                <div class="flex gap-2 shrink-0">
-                    <button id="copyButton" class="btn-scan text-xs font-semibold px-4 py-2 rounded-lg">// Copy Results</button>
-                    <button id="downloadButton" class="btn-scan text-xs font-semibold px-4 py-2 rounded-lg">// Download JSON</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Reverse IP Results Section -->
-        <div id="reverseIpResults" class="hidden">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold font-display">Reverse IP results for:
-                    <span id="ipChecked" class="text-[#f41c2c]"></span>
-                </h2>
-                <button id="redoIpLookupButton" class="hidden btn-scan font-semibold px-6 py-2 rounded-lg text-sm">// Re-Scan IP</button>
-            </div>
-            <div class="card p-4 rounded-xl">
-                <h3 class="card-title text-lg font-semibold mb-3">Hostnames Found</h3>
-                <ul id="hostnameList" class="card-content space-y-2"></ul>
-            </div>
-        </div>
-
-        <!-- Domain Check Results Section -->
-        <div id="domainResults" class="hidden">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold font-display">Scan results for:
-                    <span id="domainChecked" class="text-[#f41c2c]"></span>
-                </h2>
-                <button id="backButton" class="hidden btn-scan font-semibold px-6 py-2 rounded-lg text-sm">// Back to IP Results</button>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-
-                <!-- Column 1 -->
-                <div class="flex flex-col gap-6">
-                    <div class="card p-4 rounded-xl">
-                        <h3 class="card-title text-lg font-semibold mb-3">Registrar [WHOIS]</h3>
-                        <div id="whois" class="card-content"></div>
-                    </div>
-                    <div class="card p-4 rounded-xl">
-                        <h3 class="card-title text-lg font-semibold mb-3">A / AAAA Records</h3>
-                        <div id="a-records" class="card-content"></div>
-                    </div>
-                    <div class="card p-4 rounded-xl">
-                        <h3 class="card-title text-lg font-semibold mb-3">WWW Records</h3>
-                        <div id="www-records" class="card-content"></div>
-                    </div>
-                </div>
-
-                <!-- Column 2 -->
-                <div class="flex flex-col gap-6">
-                    <div class="card p-4 rounded-xl">
-                        <h3 class="card-title text-lg font-semibold mb-3">NS Records</h3>
-                        <ul id="nsRecords" class="card-content card-list"></ul>
-                    </div>
-                    <div class="card p-4 rounded-xl">
-                        <h3 class="card-title text-lg font-semibold mb-3">MX Records</h3>
-                        <ul id="mxRecords" class="card-content card-list"></ul>
-                    </div>
-                    <div class="card p-4 rounded-xl">
-                        <h3 class="card-title text-lg font-semibold mb-3">SOA Record</h3>
-                        <ul id="soa" class="card-content card-list"></ul>
-                    </div>
-                    <div class="card p-4 rounded-xl">
-                        <h3 class="card-title text-lg font-semibold mb-3">Reverse DNS [rDNS]</h3>
-                        <div id="rdns" class="card-content"></div>
-                    </div>
-                </div>
-
-                <!-- Column 3 -->
-                <div class="flex flex-col gap-6">
-                    <div class="card p-4 rounded-xl">
-                        <h3 class="card-title text-lg font-semibold mb-3">Security Records</h3>
-                        <div id="security" class="card-content"></div>
-                    </div>
-                    <div class="card p-4 rounded-xl">
-                        <h3 class="card-title text-lg font-semibold mb-3">SSL Certificate</h3>
-                        <div id="ssl" class="card-content"></div>
-                    </div>
-                    <div class="card p-4 rounded-xl">
-                        <h3 class="card-title text-lg font-semibold mb-3">MX PTR Records</h3>
-                        <div id="mx-ptr" class="card-content"></div>
-                    </div>
-                </div>
-
-                <!-- Column 4 -->
-                <div class="flex flex-col gap-6">
-                    <div class="card p-4 rounded-xl">
-                        <h3 class="card-title text-lg font-semibold mb-3">Technology Detection</h3>
-                        <div id="tech" class="card-content"></div>
-                    </div>
-                    <div class="card p-4 rounded-xl">
-                        <h3 class="card-title text-lg font-semibold mb-3">Security Header Analysis</h3>
-                        <div id="sec-headers" class="card-content"></div>
-                    </div>
-                    <div class="card p-4 rounded-xl">
-                        <h3 class="card-title text-lg font-semibold mb-3">Full HTTP Headers</h3>
-                        <div id="headers" class="card-content"></div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
+  <div class="panel search">
+    <div class="row">
+      <input type="text" id="queryInput" placeholder="domain.tld, URL, or IPv4 address" aria-label="Domain, URL, or IP address"
+             autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div class="row-sub">
+        <input type="text" id="nameserverInput" value="9.9.9.9" aria-label="DNS resolver"
+               title="DNS resolver IP, optional port (9.9.9.9, 127.0.0.1:5335, [2620:fe::fe]:53)"
+               placeholder="DNS resolver" autocomplete="off" spellcheck="false">
+        <button id="checkButton" class="btn">SCAN</button>
+      </div>
     </div>
+    <div id="error-message" class="err hidden" role="alert"></div>
+  </div>
 
-    <script>
-        // ---------------------------------------------------------------------------
-        // DOM refs
-        // ---------------------------------------------------------------------------
-        const queryInput          = document.getElementById('queryInput');
-        const nameserverInput     = document.getElementById('nameserverInput');
-        const checkButton         = document.getElementById('checkButton');
-        const backButton          = document.getElementById('backButton');
-        const redoIpLookupButton  = document.getElementById('redoIpLookupButton');
-        const loader              = document.getElementById('loader');
-        const loaderText          = document.getElementById('loaderText');
-        const domainResultsDiv    = document.getElementById('domainResults');
-        const reverseIpResultsDiv = document.getElementById('reverseIpResults');
-        const errorMessage        = document.getElementById('error-message');
-        const historyAndExportDiv = document.getElementById('historyAndExport');
-        const historyList         = document.getElementById('historyList');
-        const copyButton          = document.getElementById('copyButton');
-        const downloadButton      = document.getElementById('downloadButton');
+  <div class="gh"><a href="https://github.com/NullAngst/Domain-Intel-Matrix" target="_blank" rel="noopener noreferrer">// View on GitHub</a></div>
 
-        let lastIpQuery    = null;
-        let currentResults = null;
+  <div id="loader" class="loader-wrap hidden" aria-live="polite">
+    <div class="loader"></div>
+    <p id="loaderText">Executing query...</p>
+  </div>
 
-        // ---------------------------------------------------------------------------
-        // Utility: escape HTML to prevent XSS
-        // ---------------------------------------------------------------------------
-        const esc = (str) => {
-            if (str === null || str === undefined) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
-        };
+  <div id="historyAndExport" class="panel bar hidden">
+    <div class="history"><span class="label">// History:</span><span id="historyList" class="history"></span></div>
+    <div class="actions">
+      <button id="copyButton" class="btn btn-sm">// Copy Results</button>
+      <button id="downloadButton" class="btn btn-sm">// Download JSON</button>
+    </div>
+  </div>
 
-        // ---------------------------------------------------------------------------
-        // UI state helpers
-        // ---------------------------------------------------------------------------
-        const showLoader = (msg = 'Executing query...') => {
-            domainResultsDiv.classList.add('hidden');
-            reverseIpResultsDiv.classList.add('hidden');
-            historyAndExportDiv.classList.add('hidden');
-            errorMessage.classList.add('hidden');
-            loaderText.textContent = msg;
-            loader.classList.remove('hidden');
-            checkButton.disabled = true;
-        };
+  <section id="reverseIpResults" class="hidden">
+    <div class="results-head">
+      <h2>Reverse IP results for: <span id="ipChecked"></span></h2>
+      <button id="redoIpLookupButton" class="btn btn-md">// Re-Scan IP</button>
+    </div>
+    <div class="card">
+      <h3>Hostnames Found</h3>
+      <ul id="hostnameList" class="card-content"></ul>
+    </div>
+  </section>
 
-        const hideLoader = () => {
-            loader.classList.add('hidden');
-            checkButton.disabled = false;
-        };
+  <section id="domainResults" class="hidden">
+    <div class="results-head">
+      <h2>Scan results for: <span id="domainChecked"></span></h2>
+      <button id="backButton" class="btn btn-md hidden">// Back to IP Results</button>
+    </div>
+    <div class="grid">
+      <div class="col">
+        <div class="card"><h3>Registrar [WHOIS]</h3><div id="whois" class="card-content"></div></div>
+        <div class="card"><h3>A / AAAA Records</h3><div id="a-records" class="card-content"></div></div>
+        <div class="card"><h3>WWW Records</h3><div id="www-records" class="card-content"></div></div>
+      </div>
+      <div class="col">
+        <div class="card"><h3>NS Records</h3><div id="nsRecords" class="card-content"></div></div>
+        <div class="card"><h3>MX Records</h3><div id="mxRecords" class="card-content"></div></div>
+        <div class="card"><h3>SOA Record</h3><div id="soa" class="card-content"></div></div>
+        <div class="card"><h3>Reverse DNS [rDNS]</h3><div id="rdns" class="card-content"></div></div>
+      </div>
+      <div class="col">
+        <div class="card"><h3>Security Records</h3><div id="security" class="card-content"></div></div>
+        <div class="card"><h3>SSL Certificate</h3><div id="ssl" class="card-content"></div></div>
+        <div class="card"><h3>MX PTR Records</h3><div id="mx-ptr" class="card-content"></div></div>
+      </div>
+      <div class="col">
+        <div class="card"><h3>Technology Detection</h3><div id="tech" class="card-content"></div></div>
+        <div class="card"><h3>Security Header Analysis</h3><div id="sec-headers" class="card-content"></div></div>
+        <div class="card"><h3>Full HTTP Headers</h3><div id="headers" class="card-content"></div></div>
+      </div>
+    </div>
+  </section>
+</div>
 
-        const showError = (message) => {
-            hideLoader();
-            errorMessage.innerHTML = message; // allow <strong> in error messages
-            errorMessage.classList.remove('hidden');
-        };
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const queryInput = $('queryInput'), nameserverInput = $('nameserverInput'), checkButton = $('checkButton');
+const backButton = $('backButton'), redoIpLookupButton = $('redoIpLookupButton');
+const loader = $('loader'), loaderText = $('loaderText'), errorMessage = $('error-message');
+const domainResultsDiv = $('domainResults'), reverseIpResultsDiv = $('reverseIpResults');
+const historyAndExportDiv = $('historyAndExport'), historyList = $('historyList');
+const copyButton = $('copyButton'), downloadButton = $('downloadButton');
 
-        // ---------------------------------------------------------------------------
-        // Render helpers
-        // ---------------------------------------------------------------------------
+const REQUEST_TIMEOUT_MS = 90000;
+let lastIpQuery = null;
+let currentResults = null;
+let inFlight = null;
 
-        /** Render a list of strings into a <ul> element safely. */
-        const renderList = (element, items, messageIfEmpty) => {
-            if (items && items.length > 0) {
-                element.innerHTML = items
-                    .map(item => `<li><span class="break-all">${esc(item)}</span></li>`)
-                    .join('');
-            } else {
-                element.innerHTML = `<li class="list-none text-gray-500">${esc(messageIfEmpty)}</li>`;
-            }
-        };
+// ---- escaping and small builders ------------------------------------------
+const esc = (v) => (v === null || v === undefined) ? '' : String(v)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+const none = (msg) => `<span class="none">${esc(msg)}</span>`;
+const isErr = (v) => typeof v === 'string' && v.startsWith('Error:');
+const cls = (v) => isErr(v) ? ' class="bad"' : '';
+const titleCase = (k) => k.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
-        /** Render an object as a key-value list safely. */
-        const renderKeyValue = (element, data) => {
-            if (!data) {
-                element.innerHTML = '<p class="text-gray-500">No data found.</p>';
-                return;
-            }
-            if (data.error) {
-                element.innerHTML = `<p class="text-red-400 break-all">${esc(data.error)}</p>`;
-                return;
-            }
-            const entries = Object.entries(data);
-            if (entries.length === 0) {
-                element.innerHTML = '<p class="text-gray-500">No data found.</p>';
-                return;
-            }
-            let html = '<ul class="space-y-1">';
-            for (const [key, value] of entries) {
-                const displayKey = esc(key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
-                let displayValue;
-                if (Array.isArray(value)) {
-                    displayValue = value.length > 0
-                        ? value.map(v => `<span class="break-all">${esc(String(v))}</span>`).join(', ')
-                        : '<span class="text-gray-500">None</span>';
-                } else {
-                    displayValue = value
-                        ? `<span class="break-all">${esc(String(value))}</span>`
-                        : '<span class="text-gray-500">N/A</span>';
-                }
-                html += `<li><strong>${displayKey}:</strong> ${displayValue}</li>`;
-            }
-            html += '</ul>';
-            element.innerHTML = html;
-        };
+/** <ul> of strings; empty/null shows the fallback message. */
+const listHtml = (items, empty = 'None', style = 'dots') =>
+  (items && items.length)
+    ? `<ul class="${style}">${items.map((i) => `<li${cls(i)}>${esc(i)}</li>`).join('')}</ul>`
+    : `<ul><li>${none(empty)}</li></ul>`;
 
-        /** Render MX PTR records. */
-        const renderMxPtr = (element, data) => {
-            if (!data || data.length === 0) {
-                element.innerHTML = '<p class="text-gray-500">No MX PTR records found.</p>';
-                return;
-            }
-            let html = '<ul class="space-y-2">';
-            data.forEach(item => {
-                html += `<li>
-                    <strong class="break-all">${esc(item.mail_server)}</strong>
-                    <ul class="list-disc list-inside ml-4 text-xs">
-                        <li><strong>IP:</strong> <span class="break-all">${esc(item.ip)}</span></li>
-                        <li><strong>PTR:</strong> <span class="break-all">${esc(item.ptr)}</span></li>
-                    </ul>
-                </li>`;
-            });
-            html += '</ul>';
-            element.innerHTML = html;
-        };
+const preHtml = (items, empty = 'Not Found', sep = '\n') =>
+  `<pre${items && items.some(isErr) ? ' class="bad"' : ''}>${esc(items && items.length ? items.join(sep) : empty)}</pre>`;
 
-        /** Render security headers with colour-coded badges. */
-        const renderSecurityHeaders = (element, data) => {
-            if (!data) {
-                element.innerHTML = '<p class="text-gray-500">No data.</p>';
-                return;
-            }
-            let html = '<ul class="space-y-1">';
-            for (const [header, value] of Object.entries(data)) {
-                const isMissing = value === 'Missing';
-                const badgeClass = isMissing ? 'badge-miss' : 'badge-ok';
-                const displayValue = isMissing
-                    ? '<span class="badge-miss">✗ Missing</span>'
-                    : `<span class="badge-ok">✓</span> <span class="break-all text-xs">${esc(value)}</span>`;
-                html += `<li class="text-xs"><strong class="text-gray-300">${esc(header)}:</strong> ${displayValue}</li>`;
-            }
-            html += '</ul>';
-            element.innerHTML = html;
-        };
+const kvHtml = (data) => {
+  if (!data) return `<p>${none('No data found.')}</p>`;
+  if (data.error) return `<p class="bad">${esc(data.error)}</p>`;
+  const entries = Object.entries(data);
+  if (!entries.length) return `<p>${none('No data found.')}</p>`;
+  return '<ul>' + entries.map(([k, v]) => {
+    let shown;
+    if (Array.isArray(v)) shown = v.length ? esc(v.join(', ')) : none('None');
+    else shown = (v === null || v === undefined || v === '') ? none('N/A') : esc(v);
+    return `<li><strong>${esc(titleCase(k))}:</strong> ${shown}</li>`;
+  }).join('') + '</ul>';
+};
 
-        /** Render SSL cert info, including SAN list if available. */
-        const renderSslInfo = (element, data) => {
-            if (!data) {
-                element.innerHTML = '<p class="text-gray-500">No SSL data.</p>';
-                return;
-            }
-            if (data.error) {
-                element.innerHTML = `<p class="text-red-400 break-all">${esc(data.error)}</p>`;
-                return;
-            }
-            let html = '<ul class="space-y-1">';
-            const fields = ['issuer_common_name', 'issuer_org', 'subject_common_name', 'expires'];
-            for (const field of fields) {
-                if (data[field] !== undefined) {
-                    const label = esc(field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
-                    html += `<li><strong>${label}:</strong> <span class="break-all">${esc(data[field])}</span></li>`;
-                }
-            }
-            if (data.subject_alt_names && data.subject_alt_names.length > 0) {
-                html += `<li class="mt-2"><strong>Subject Alt Names (${esc(String(data.subject_alt_names.length))}):</strong>
-                    <pre class="bg-gray-900 p-2 rounded text-xs mt-1 max-h-32 overflow-y-auto">${data.subject_alt_names.map(esc).join('\n')}</pre>
-                </li>`;
-            }
-            html += '</ul>';
-            element.innerHTML = html;
-        };
+// ---- UI state --------------------------------------------------------------
+const showLoader = (msg) => {
+  domainResultsDiv.classList.add('hidden');
+  reverseIpResultsDiv.classList.add('hidden');
+  historyAndExportDiv.classList.add('hidden');
+  errorMessage.classList.add('hidden');
+  loaderText.textContent = msg;
+  loader.classList.remove('hidden');
+  checkButton.disabled = true;
+};
+const hideLoader = () => { loader.classList.add('hidden'); checkButton.disabled = false; };
 
-        // ---------------------------------------------------------------------------
-        // Main render functions
-        // ---------------------------------------------------------------------------
+/** Errors are built with DOM nodes so no message can inject markup. */
+const showError = (message, hint) => {
+  hideLoader();
+  errorMessage.replaceChildren();
+  const s = document.createElement('strong');
+  s.textContent = 'Error: ';
+  s.className = 'bad';
+  errorMessage.append(s, document.createTextNode(message));
+  if (hint) {
+    const h = document.createElement('small');
+    h.textContent = hint;
+    errorMessage.append(h);
+  }
+  errorMessage.classList.remove('hidden');
+};
 
-        const renderDomainResults = (data) => {
-            currentResults = data;
-            historyAndExportDiv.classList.remove('hidden');
-            backButton.classList.toggle('hidden', !lastIpQuery);
+// ---- renderers -------------------------------------------------------------
+const renderSecurityHeaders = (data) => {
+  if (!data) return `<p>${none('No data.')}</p>`;
+  return '<ul>' + Object.entries(data).map(([h, v]) => {
+    const val = v === 'Missing'
+      ? '<span class="bad">&#10007; Missing</span>'
+      : `<span class="ok">&#10003;</span> ${esc(v)}`;
+    return `<li class="xs"><strong>${esc(h)}:</strong> ${val}</li>`;
+  }).join('') + '</ul>';
+};
 
-            document.getElementById('domainChecked').textContent = data.domain;
+const renderSsl = (d) => {
+  if (!d) return `<p>${none('No SSL data.')}</p>`;
+  if (d.error) return `<p class="bad">${esc(d.error)}</p>`;
+  let days = '';
+  if (typeof d.days_remaining === 'number') {
+    const c = d.days_remaining < 0 ? 'bad' : d.days_remaining < 14 ? 'warn' : 'ok';
+    days = ` <span class="${c}">(${d.days_remaining < 0 ? 'expired ' + Math.abs(d.days_remaining) + ' days ago' : d.days_remaining + ' days left'})</span>`;
+  }
+  let html = '<ul>';
+  html += `<li><strong>Trusted:</strong> ${d.valid ? '<span class="ok">Yes</span>' : '<span class="bad">No</span>'}</li>`;
+  if (d.verification_error) html += `<li class="bad xs">${esc(d.verification_error)}</li>`;
+  html += `<li><strong>Issuer:</strong> ${esc(d.issuer_common_name)}</li>`;
+  html += `<li><strong>Issuer Org:</strong> ${esc(d.issuer_org)}</li>`;
+  html += `<li><strong>Subject:</strong> ${esc(d.subject_common_name)}</li>`;
+  html += `<li><strong>Expires:</strong> ${esc(d.expires)}${days}</li>`;
+  if (d.tls_version) html += `<li><strong>Protocol:</strong> ${esc(d.tls_version)} / ${esc(d.cipher)}</li>`;
+  html += '</ul>';
+  if (d.subject_alt_names && d.subject_alt_names.length) {
+    const total = d.subject_alt_names_total || d.subject_alt_names.length;
+    const label = total > d.subject_alt_names.length ? `${d.subject_alt_names.length} of ${total}` : total;
+    html += `<strong>Subject Alt Names (${esc(label)}):</strong>${preHtml(d.subject_alt_names)}`;
+  }
+  return html;
+};
 
-            // WHOIS
-            renderKeyValue(document.getElementById('whois'), data.whois);
+const renderDomainResults = (data) => {
+  currentResults = data;
+  const dnsd = data.dns || {}, sec = data.security || {}, srv = data.server || {};
+  historyAndExportDiv.classList.remove('hidden');
+  backButton.classList.toggle('hidden', !lastIpQuery);
+  $('domainChecked').textContent = data.domain;
 
-            // A / AAAA records
-            const aDiv = document.getElementById('a-records');
-            aDiv.innerHTML =
-                `<strong>A (IPv4):</strong><ul class="list-disc list-inside mb-2">` +
-                ((data.dns.A || []).map(i => `<li><span class="break-all">${esc(i)}</span></li>`).join('') ||
-                    '<li class="list-none text-gray-500">None</li>') +
-                `</ul><strong>AAAA (IPv6):</strong><ul class="list-disc list-inside">` +
-                ((data.dns.AAAA || []).map(i => `<li><span class="break-all">${esc(i)}</span></li>`).join('') ||
-                    '<li class="list-none text-gray-500">None</li>') +
-                `</ul>`;
+  $('whois').innerHTML = kvHtml(data.whois);
+  $('a-records').innerHTML = `<strong>A (IPv4):</strong>${listHtml(dnsd.A)}<strong>AAAA (IPv6):</strong>${listHtml(dnsd.AAAA)}`;
+  $('www-records').innerHTML = `<strong>A (www):</strong>${listHtml(dnsd.A_www)}<strong>CNAME (www):</strong>${listHtml(dnsd.CNAME_www)}`;
+  $('nsRecords').innerHTML = listHtml(dnsd.NS, 'No NS records found.', 'chev');
+  $('mxRecords').innerHTML = listHtml(dnsd.MX, 'No MX records found.', 'chev');
+  $('soa').innerHTML = listHtml(dnsd.SOA, 'No SOA record found.', 'chev');
 
-            // WWW records
-            const wwwDiv = document.getElementById('www-records');
-            wwwDiv.innerHTML =
-                `<strong>A (www):</strong><ul class="list-disc list-inside mb-2">` +
-                ((data.dns.A_www || []).map(i => `<li><span class="break-all">${esc(i)}</span></li>`).join('') ||
-                    '<li class="list-none text-gray-500">None</li>') +
-                `</ul><strong>CNAME (www):</strong><ul class="list-disc list-inside">` +
-                ((data.dns.CNAME_www || []).map(i => `<li><span class="break-all">${esc(i)}</span></li>`).join('') ||
-                    '<li class="list-none text-gray-500">None</li>') +
-                `</ul>`;
+  $('rdns').innerHTML = (dnsd.rDNS && dnsd.rDNS.length)
+    ? '<ul>' + dnsd.rDNS.map((r) => `<li><strong>${esc(r.ip)}</strong><br><span${cls(r.hostname)}>${esc(r.hostname)}</span></li>`).join('') + '</ul>'
+    : `<p>${none('No A records to look up.')}</p>`;
 
-            renderList(document.getElementById('nsRecords'), data.dns.NS, 'No NS records found.');
-            renderList(document.getElementById('mxRecords'), data.dns.MX, 'No MX records found.');
-            renderMxPtr(document.getElementById('mx-ptr'), data.dns.MX_PTR);
-            renderList(document.getElementById('soa'), data.dns.SOA, 'No SOA record found.');
-            renderKeyValue(document.getElementById('rdns'), data.dns.rDNS);
+  $('mx-ptr').innerHTML = (dnsd.MX_PTR && dnsd.MX_PTR.length)
+    ? '<ul>' + dnsd.MX_PTR.map((m) => `<li><strong>${esc(m.mail_server)}</strong>
+        <ul class="sub dots"><li><strong>IP:</strong> ${esc(m.ip)}</li><li><strong>PTR:</strong> <span${cls(m.ptr)}>${esc(m.ptr)}</span></li></ul></li>`).join('') + '</ul>'
+    : `<p>${none('No MX PTR records found.')}</p>`;
 
-            // Security records
-            const secDiv = document.getElementById('security');
-            secDiv.innerHTML =
-                `<p class="mb-2"><strong>DNSSEC:</strong> ${esc(data.security.DNSSEC || 'N/A')}</p>` +
-                `<p class="mb-1"><strong>CAA:</strong></p>` +
-                `<pre class="bg-gray-900 p-2 rounded mb-2 text-xs">${esc((data.security.CAA || ['Not Found']).join('\n'))}</pre>` +
-                `<p class="mb-1"><strong>SPF:</strong></p>` +
-                `<pre class="bg-gray-900 p-2 rounded mb-2 text-xs">${esc(data.security.SPF || 'Not Found')}</pre>` +
-                `<p class="mb-1"><strong>DMARC:</strong></p>` +
-                `<pre class="bg-gray-900 p-2 rounded mb-2 text-xs">${esc((data.security.DMARC || ['Not Found']).join('\n'))}</pre>` +
-                `<p class="mb-1"><strong>DKIM (Common Selectors):</strong></p>` +
-                `<pre class="bg-gray-900 p-2 rounded text-xs max-h-40 overflow-y-auto">${esc((data.security.DKIM || ['Not Found']).join('\n\n'))}</pre>`;
+  const dnssec = sec.DNSSEC || 'N/A';
+  const dnssecCls = dnssec.startsWith('Signed') ? 'ok' : (dnssec.startsWith('Not signed') ? '' : 'warn');
+  $('security').innerHTML =
+    `<p><strong>DNSSEC:</strong> <span class="${dnssecCls}">${esc(dnssec)}</span></p>` +
+    `<strong>CAA:</strong>${preHtml(sec.CAA)}` +
+    `<strong>SPF:</strong>${preHtml(sec.SPF)}` +
+    (sec.SPF_warning ? `<p class="warn xs">${esc(sec.SPF_warning)}</p>` : '') +
+    `<strong>DMARC:</strong>${preHtml(sec.DMARC)}` +
+    `<strong>DKIM (common selectors):</strong>${preHtml(sec.DKIM, 'None of the common selectors found', '\n\n')}`;
 
-            renderSslInfo(document.getElementById('ssl'), data.server.ssl_info);
-            renderKeyValue(document.getElementById('tech'), data.server.technologies);
-            renderSecurityHeaders(document.getElementById('sec-headers'), data.server.security_headers);
+  $('ssl').innerHTML = renderSsl(srv.ssl_info);
+  $('tech').innerHTML = kvHtml(srv.technologies);
+  $('sec-headers').innerHTML = renderSecurityHeaders(srv.security_headers);
 
-            // Full HTTP headers
-            const headersDiv = document.getElementById('headers');
-            if (data.server && !data.server.error) {
-                const headerLines = Object.entries(data.server.headers || {})
-                    .map(([k, v]) => `${esc(k)}: ${esc(v)}`)
-                    .join('\n');
-                headersDiv.innerHTML =
-                    `<p class="mb-1"><strong>Protocol:</strong> <span class="uppercase">${esc(data.server.protocol)}</span></p>` +
-                    `<p class="mb-1"><strong>Status:</strong> ${esc(String(data.server.status_code))}</p>` +
-                    `<p class="mb-2"><strong>Final URL:</strong> <span class="break-all">${esc(data.server.final_url)}</span></p>` +
-                    `<strong>Headers:</strong><pre class="bg-gray-900 p-2 rounded text-xs mt-1 h-48 overflow-y-auto">${headerLines}</pre>`;
-            } else {
-                renderKeyValue(headersDiv, data.server);
-            }
+  let hdr = '';
+  if (srv.ssl_error) hdr += `<p class="warn xs"><strong>HTTPS failed:</strong> ${esc(srv.ssl_error)}</p>`;
+  if (srv.error) {
+    hdr += `<p class="bad">${esc(srv.error)}</p>`;
+    if (srv.errors) hdr += listHtml(srv.errors);
+  } else {
+    const lines = Object.entries(srv.headers || {}).map(([k, v]) => `${k}: ${v}`);
+    hdr += `<p><strong>Protocol:</strong> ${esc((srv.protocol || '').toUpperCase())}</p>` +
+           `<p><strong>Status:</strong> ${esc(srv.status_code)}</p>` +
+           (srv.redirects && srv.redirects.length ? `<p><strong>Redirects:</strong> ${esc(srv.redirects.length)}</p>` : '') +
+           `<p><strong>Final URL:</strong> ${esc(srv.final_url)}</p>` +
+           `<strong>Headers:</strong>${preHtml(lines, 'No headers')}`;
+  }
+  $('headers').innerHTML = hdr;
 
-            hideLoader();
-            domainResultsDiv.classList.remove('hidden');
-        };
+  hideLoader();
+  domainResultsDiv.classList.remove('hidden');
+};
 
-        const renderIpLookupResults = (query, hostnames) => {
-            currentResults = { query, hostnames };
-            historyAndExportDiv.classList.remove('hidden');
-            document.getElementById('ipChecked').textContent = query;
-            redoIpLookupButton.classList.remove('hidden');
+const renderIpLookupResults = (query, data) => {
+  currentResults = { query, hostnames: data.hostnames || [], error: data.error || null };
+  historyAndExportDiv.classList.remove('hidden');
+  $('ipChecked').textContent = query;
 
-            const listEl = document.getElementById('hostnameList');
-            listEl.innerHTML = '';
+  const listEl = $('hostnameList');
+  listEl.replaceChildren();
+  const hosts = data.hostnames || [];
+  if (!data.error && hosts.length) {
+    hosts.forEach((h) => {
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.textContent = h;
+      btn.className = 'linkbtn hostbtn';
+      btn.addEventListener('click', () => performCheck(h, { fromIpList: true }));
+      li.appendChild(btn);
+      listEl.appendChild(li);
+    });
+  } else {
+    const li = document.createElement('li');
+    li.className = data.error ? 'bad' : 'none';
+    li.textContent = data.error || 'No hostnames found for this IP.';
+    listEl.appendChild(li);
+  }
+  hideLoader();
+  reverseIpResultsDiv.classList.remove('hidden');
+};
 
-            const isError = !hostnames || hostnames.length === 0 ||
-                hostnames[0].startsWith('API Error') ||
-                hostnames[0].startsWith('Request failed') ||
-                hostnames[0] === 'No DNS A records found';
+// ---- history (localStorage can throw in private modes) ----------------------
+const readHistory = () => {
+  try { const h = JSON.parse(localStorage.getItem('dimHistory') || '[]'); return Array.isArray(h) ? h : []; }
+  catch (_) { return []; }
+};
+const updateHistory = (q) => {
+  const h = [q, ...readHistory().filter((i) => i !== q)].slice(0, 10);
+  try { localStorage.setItem('dimHistory', JSON.stringify(h)); } catch (_) { /* storage unavailable */ }
+  renderHistory();
+};
+const renderHistory = () => {
+  historyList.replaceChildren();
+  readHistory().forEach((item) => {
+    const btn = document.createElement('button');
+    btn.textContent = item;
+    btn.className = 'linkbtn';
+    btn.addEventListener('click', () => performCheck(item));
+    historyList.appendChild(btn);
+  });
+};
 
-            if (!isError) {
-                hostnames.forEach(hostname => {
-                    const li = document.createElement('li');
-                    const btn = document.createElement('button');
-                    btn.textContent = hostname;         // textContent — safe
-                    btn.className = 'text-[#f41c2c] hover:underline cursor-pointer';
-                    btn.addEventListener('click', () => performCheck(hostname));
-                    li.appendChild(btn);
-                    listEl.appendChild(li);
-                });
-            } else {
-                const li = document.createElement('li');
-                li.className = 'text-gray-500';
-                li.textContent = hostnames[0] || 'No hostnames found for this IP.';
-                listEl.appendChild(li);
-            }
+// ---- core ------------------------------------------------------------------
+const looksLikeIp = (s) => /^(\d{1,3}\.){3}\d{1,3}$/.test(s) || (s.includes(':') && /^\[?[0-9a-fA-F:.]+\]?$/.test(s));
 
-            hideLoader();
-            reverseIpResultsDiv.classList.remove('hidden');
-        };
+const performCheck = async (queryOverride, { fromIpList = false, forceRefresh = false } = {}) => {
+  const query = (queryOverride || queryInput.value).trim();
+  if (!query) { showError('Enter a domain, URL, or IP address.'); return; }
+  queryInput.value = query;
 
-        // ---------------------------------------------------------------------------
-        // History (localStorage)
-        // ---------------------------------------------------------------------------
-        const updateHistory = (query) => {
-            let history = JSON.parse(localStorage.getItem('dimHistory') || '[]');
-            history = history.filter(item => item !== query);
-            history.unshift(query);
-            if (history.length > 10) history.pop();
-            localStorage.setItem('dimHistory', JSON.stringify(history));
-            renderHistory();
-        };
+  const isIp = looksLikeIp(query);
+  if (!isIp && !fromIpList) lastIpQuery = null;
 
-        const renderHistory = () => {
-            const history = JSON.parse(localStorage.getItem('dimHistory') || '[]');
-            historyList.innerHTML = '';
-            history.forEach(item => {
-                const btn = document.createElement('button');
-                btn.textContent = item;   // textContent — safe
-                btn.className = 'text-gray-400 hover:text-[#f41c2c] mr-2 underline decoration-dotted';
-                btn.addEventListener('click', () => performCheck(item));
-                historyList.appendChild(btn);
-            });
-        };
+  const cacheKey = `dim:${query}`;
+  if (isIp && !forceRefresh) {
+    try {
+      const cached = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
+      if (cached && cached.type === 'ip_lookup' && !cached.error) {
+        lastIpQuery = query;
+        renderIpLookupResults(query, cached);
+        return;
+      }
+    } catch (_) { /* corrupt or unavailable, fetch fresh */ }
+  }
 
-        // ---------------------------------------------------------------------------
-        // Core check function
-        // ---------------------------------------------------------------------------
+  if (inFlight) inFlight.abort();
+  const controller = new AbortController();
+  inFlight = controller;
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-        /** Simple, conservative test for whether a string looks like an IP address. */
-        const looksLikeIp = (str) => /^(\d{1,3}\.){3}\d{1,3}$/.test(str) || /^[0-9a-fA-F:]{2,39}$/.test(str);
+  const nameserver = nameserverInput.value.trim() || '9.9.9.9';
+  showLoader(isIp ? 'Running reverse IP lookup...' : `Scanning ${query}...`);
 
-        const performCheck = async (queryOverride, forceRefresh = false) => {
-            const query = (queryOverride || queryInput.value.trim());
-            if (!query) {
-                showError('Target query required.');
-                return;
-            }
+  try {
+    const url = new URL('/check', window.location.origin);
+    url.searchParams.set('query', query);
+    url.searchParams.set('nameserver', nameserver);
+    const response = await fetch(url, { signal: controller.signal });
 
-            // Update the input to reflect what we're scanning
-            if (!queryOverride) {
-                if (!looksLikeIp(query)) lastIpQuery = null;
-            }
+    let data = null;
+    try { data = await response.json(); } catch (_) { /* non-JSON body */ }
+    if (!response.ok) throw new Error((data && data.error) || `Server returned HTTP ${response.status}.`);
+    if (!data) throw new Error('Server returned an unreadable response.');
 
-            // Session cache (domain results are not cached — only IP lookups)
-            const cacheKey = `dim:${query}`;
-            if (!forceRefresh) {
-                const cached = sessionStorage.getItem(cacheKey);
-                if (cached) {
-                    try {
-                        const data = JSON.parse(cached);
-                        if (data.type === 'ip_lookup') {
-                            lastIpQuery = query;
-                            domainResultsDiv.classList.add('hidden');
-                            showLoader('Loading cached results...');
-                            renderIpLookupResults(query, data.hostnames);
-                            return;
-                        }
-                    } catch (_) { /* corrupted cache — fall through */ }
-                }
-            }
+    updateHistory(query);
+    if (data.type === 'ip_lookup') {
+      lastIpQuery = query;
+      if (!data.error) { try { sessionStorage.setItem(cacheKey, JSON.stringify(data)); } catch (_) {} }
+      renderIpLookupResults(query, data);
+    } else if (data.type === 'domain_check') {
+      renderDomainResults(data.data);
+    } else {
+      throw new Error('Unexpected response type from server.');
+    }
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      if (inFlight === controller) showError(`Request timed out after ${REQUEST_TIMEOUT_MS / 1000} seconds.`);
+      return;
+    }
+    const network = error instanceof TypeError;
+    showError(error.message, network ? 'Could not reach the backend. Check that the Python server is running.' : null);
+  } finally {
+    clearTimeout(timer);
+    if (inFlight === controller) inFlight = null;
+  }
+};
 
-            const nameserver = nameserverInput.value.trim() || '9.9.9.9';
-            showLoader(looksLikeIp(query) ? 'Running reverse IP lookup...' : `Scanning ${query}...`);
+// ---- events ----------------------------------------------------------------
+checkButton.addEventListener('click', () => performCheck());
+[queryInput, nameserverInput].forEach((el) =>
+  el.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !checkButton.disabled) performCheck(); }));
+backButton.addEventListener('click', () => { if (lastIpQuery) performCheck(lastIpQuery); });
+redoIpLookupButton.addEventListener('click', () => {
+  if (!lastIpQuery) return;
+  try { sessionStorage.removeItem(`dim:${lastIpQuery}`); } catch (_) {}
+  performCheck(lastIpQuery, { forceRefresh: true });
+});
+copyButton.addEventListener('click', async () => {
+  if (!currentResults) return;
+  const orig = copyButton.textContent;
+  const text = JSON.stringify(currentResults, null, 2);
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      // Plain-HTTP LAN access has no Clipboard API; fall back to execCommand
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove();
+      if (!ok) throw new Error('copy failed');
+    }
+    copyButton.textContent = '// Copied!';
+  } catch (_) {
+    copyButton.textContent = '// Copy failed';
+  }
+  setTimeout(() => { copyButton.textContent = orig; }, 2000);
+});
+downloadButton.addEventListener('click', () => {
+  if (!currentResults) return;
+  const blob = new Blob([JSON.stringify(currentResults, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${(currentResults.domain || currentResults.query || 'results').replace(/[^a-z0-9._-]/gi, '_')}_results.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
 
-            try {
-                const url = new URL('/check', window.location.origin);
-                url.searchParams.set('query', query);
-                url.searchParams.set('nameserver', nameserver);
-
-                const response = await fetch(url);
-
-                if (!response.ok) {
-                    let errMsg = `Server returned HTTP ${response.status}.`;
-                    try {
-                        const errData = await response.json();
-                        if (errData.error) errMsg = esc(errData.error);
-                    } catch (_) {}
-                    throw new Error(errMsg);
-                }
-
-                const data = await response.json();
-                updateHistory(query);
-
-                if (data.type === 'ip_lookup') {
-                    lastIpQuery = query;
-                    sessionStorage.setItem(cacheKey, JSON.stringify(data));
-                    renderIpLookupResults(query, data.hostnames);
-                } else if (data.type === 'domain_check') {
-                    renderDomainResults(data.data);
-                } else {
-                    throw new Error('Unexpected response type from server.');
-                }
-
-            } catch (error) {
-                showError(
-                    `<strong>Error:</strong> ${error.message}<br><br>` +
-                    `<span class="text-gray-400 text-sm">If this is a connection error, make sure the Python backend is running on port 4500.</span>`
-                );
-            }
-        };
-
-        // ---------------------------------------------------------------------------
-        // Event listeners
-        // ---------------------------------------------------------------------------
-        checkButton.addEventListener('click', () => performCheck());
-        queryInput.addEventListener('keyup', e => { if (e.key === 'Enter') performCheck(); });
-        nameserverInput.addEventListener('keyup', e => { if (e.key === 'Enter') performCheck(); });
-
-        backButton.addEventListener('click', () => {
-            if (lastIpQuery) performCheck(lastIpQuery);
-        });
-
-        redoIpLookupButton.addEventListener('click', () => {
-            if (lastIpQuery) {
-                sessionStorage.removeItem(`dim:${lastIpQuery}`);
-                performCheck(lastIpQuery, true);
-            }
-        });
-
-        copyButton.addEventListener('click', () => {
-            if (!currentResults) return;
-            navigator.clipboard.writeText(JSON.stringify(currentResults, null, 2)).then(() => {
-                const orig = copyButton.textContent;
-                copyButton.textContent = '// Copied!';
-                setTimeout(() => { copyButton.textContent = orig; }, 2000);
-            });
-        });
-
-        downloadButton.addEventListener('click', () => {
-            if (!currentResults) return;
-            const blob = new Blob([JSON.stringify(currentResults, null, 2)], { type: 'application/json' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `${currentResults.domain || currentResults.query}_results.json`;
-            a.click();
-            URL.revokeObjectURL(a.href);
-        });
-
-        // Init
-        renderHistory();
-    </script>
+renderHistory();
+</script>
 </body>
 </html>

@@ -1,6 +1,6 @@
-Flask
-Flask-Cors
-dnspython
-python-whois
-requests
-ipaddress
+Flask>=2.2
+dnspython>=2.1
+python-whois>=0.9
+requests>=2.28
+cryptography>=41
+waitress>=2.1
